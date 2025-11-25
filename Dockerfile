@@ -1,6 +1,6 @@
-# ============================
-# 1. BUILDER IMAGE
-# ============================
+# ============================================
+# 1) BUILDER — Install deps + build Next.js + Payload Admin
+# ============================================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -10,46 +10,58 @@ RUN npm install -g pnpm
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
+COPY tsconfig.json ./tsconfig.json
 
 # Install dependencies
 RUN pnpm install
 
-# Copy full project
-COPY . .
+# Copy source files
+COPY src ./src
+COPY next.config.mjs ./
+COPY eslint.config.mjs ./
+COPY playwright.config.ts ./
+COPY vitest.config.mts ./
+COPY vitest.setup.ts ./
 
-# Build Next.js (Payload Admin is inside .next)
+# Copy Payload config
+COPY src/payload.config.ts ./src/payload.config.ts
+
+# Only copy /public IF you have it
+# (this won't break if it's missing)
+RUN mkdir -p public
+COPY public ./public 2>/dev/null || true
+
+# Build Next.js
 RUN pnpm build
 
+# Build Payload Admin
+RUN pnpm payload:build
 
-# ============================
-# 2. RUNNER IMAGE
-# ============================
+
+# ============================================
+# 2) RUNNER — minimal image for production
+# ============================================
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Install pnpm
 RUN npm install -g pnpm
 
-# Copy ONLY what is required to run Payload + Next.js
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+# Copy node_modules from builder
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy Next.js build output
+# Copy build output
 COPY --from=builder /app/.next ./.next
-
-# Copy public folder IF it exists
-COPY --from=builder /app/public ./public
-
-# Copy your source files (for Payload server runtime)
 COPY --from=builder /app/src ./src
-
-# Copy tsconfig
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/public ./public 2>/dev/null || true
 
-# Expose web server port
+# Payload Admin build output
+COPY --from=builder /app/build ./build
+
+ENV NODE_ENV=production
 EXPOSE 3000
 
-# Start Next.js server (Payload is inside the Next server)
 CMD ["pnpm", "start"]
