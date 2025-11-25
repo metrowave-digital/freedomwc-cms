@@ -35,11 +35,12 @@ RUN mkdir -p public
 # Uncomment this line later if you add assets to a "public" folder.
 # COPY public ./public
 
-# Build Next.js
+# Build Next.js (This includes the Payload Admin panel in modern versions)
 RUN pnpm build
 
-# Build Payload Admin
-RUN pnpm payload:build
+# REMOVED: pnpm payload:build
+# Reason: In Payload 3.0 / Next.js builds, the admin panel is built by "next build".
+# The "payload build" command does not exist in this version.
 
 
 # ============================================
@@ -64,8 +65,8 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 # so this copy command will work successfully even if source was missing.
 COPY --from=builder /app/public ./public
 
-# Payload Admin build output
-COPY --from=builder /app/build ./build
+# REMOVED: COPY --from=builder /app/build ./build
+# Reason: Since there is no separate payload build step, there is no ./build folder.
 
 ENV NODE_ENV=production
 EXPOSE 3000
