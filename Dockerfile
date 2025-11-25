@@ -1,39 +1,65 @@
 # ============================
-# 1. Base image
+# 1. BASE IMAGE
 # ============================
-FROM node:20-slim
-
-# Fix node-gyp and sharp
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
-
-# ============================
-# 2. Create working dir
-# ============================
+FROM node:20 AS base
 WORKDIR /app
 
 # ============================
-# 3. Install dependencies
+# 2. INSTALL PNPM
 # ============================
-COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile
 
 # ============================
-# 4. Copy source code
+# 3. INSTALL DEPENDENCIES
 # ============================
+FROM base AS deps
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml ./
+
+# ❗️ NO --frozen-lockfile (Render fails with it)
+RUN pnpm install
+
+# ============================
+# 4. BUILD PHASE
+# ============================
+FROM deps AS builder
+WORKDIR /app
+
 COPY . .
 
-# ============================
-# 5. Payload v3 DOES NOT NEED build step
-#    Admin panel builds at runtime automatically
-# ============================
+# ----------------------------
+# BUILD PAYLOAD ADMIN
+# ----------------------------
+RUN pnpm payload build
+
+# ----------------------------
+# BUILD NEXT.JS
+# ----------------------------
+RUN pnpm build
 
 # ============================
-# 6. Expose port
+# 5. RUNNER / PRODUCTION IMAGE
 # ============================
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only what we need for production
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Payload Admin build output
+COPY --from=builder /app/build ./build
+
+# Next.js build output (.next)
+COPY --from=builder /app/.next ./.next
+
+# Public folder
+COPY --from=builder /app/public ./public
+
+# Start the Next.js server (Payload runs inside it)
 EXPOSE 3000
-
-# ============================
-# 7. Start server
-# ============================
-CMD ["pnpm", "run", "start"]
+CMD ["pnpm", "start"]
