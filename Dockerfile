@@ -1,56 +1,55 @@
 # ============================
-# 1. Base Builder Image
+# 1. BUILDER IMAGE
 # ============================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm globally
+# Install pnpm
 RUN npm install -g pnpm
 
-# Copy workspace files
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
-COPY tsconfig.json ./tsconfig.json
-COPY public ./public
-COPY src ./src
-COPY payload.config.ts ./payload.config.ts
 
 # Install dependencies
 RUN pnpm install
 
-# Generate Payload types and import-map
-RUN pnpm payload generate:types
-RUN pnpm payload generate:importmap
+# Copy full project
+COPY . .
 
-# Build Next.js (includes Payload admin)
+# Build Next.js (Payload Admin is inside .next)
 RUN pnpm build
 
 
 # ============================
-# 2. Runner Image
+# 2. RUNNER IMAGE
 # ============================
 FROM node:20-alpine AS runner
 
 WORKDIR /app
-ENV NODE_ENV=production
 
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy ONLY required runtime files
+# Copy ONLY what is required to run Payload + Next.js
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/node_modules ./node_modules
 
-# NEXT.JS BUILD OUTPUT
+# Copy Next.js build output
 COPY --from=builder /app/.next ./.next
+
+# Copy public folder IF it exists
 COPY --from=builder /app/public ./public
 
-# COPY SOURCE (Payload needs these for server runtime)
+# Copy your source files (for Payload server runtime)
 COPY --from=builder /app/src ./src
-COPY --from=builder /app/payload.config.ts ./payload.config.ts
+
+# Copy tsconfig
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
+# Expose web server port
 EXPOSE 3000
 
+# Start Next.js server (Payload is inside the Next server)
 CMD ["pnpm", "start"]
