@@ -26,10 +26,14 @@ COPY vitest.setup.ts ./
 # Copy Payload config
 COPY src/payload.config.ts ./src/payload.config.ts
 
-# Only copy /public IF you have it. 
-# NOTE: The source "public" directory MUST exist on your host machine 
-# for this line to work. If it might be missing, create it locally first.
-COPY public ./public
+# Create an empty public folder in the container to ensure it exists
+# even if the host machine doesn't have one.
+RUN mkdir -p public
+
+# ERROR FIX: The source "public" folder is missing on your machine.
+# We've commented this out to allow the build to pass. 
+# Uncomment this line later if you add assets to a "public" folder.
+# COPY public ./public
 
 # Build Next.js
 RUN pnpm build
@@ -56,7 +60,8 @@ COPY --from=builder /app/src ./src
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
-# Note: The builder stage copy ensures this exists in the image now
+# Note: The builder stage now has an empty /public folder (created by mkdir), 
+# so this copy command will work successfully even if source was missing.
 COPY --from=builder /app/public ./public
 
 # Payload Admin build output
