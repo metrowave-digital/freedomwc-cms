@@ -26,10 +26,10 @@ COPY vitest.setup.ts ./
 # Copy Payload config
 COPY src/payload.config.ts ./src/payload.config.ts
 
-# Only copy /public IF you have it
-# (this won't break if it's missing)
-RUN mkdir -p public
-COPY public ./public 2>/dev/null || true
+# Only copy /public IF you have it. 
+# NOTE: The source "public" directory MUST exist on your host machine 
+# for this line to work. If it might be missing, create it locally first.
+COPY public ./public
 
 # Build Next.js
 RUN pnpm build
@@ -56,7 +56,8 @@ COPY --from=builder /app/src ./src
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
-COPY --from=builder /app/public ./public 2>/dev/null || true
+# Note: The builder stage copy ensures this exists in the image now
+COPY --from=builder /app/public ./public
 
 # Payload Admin build output
 COPY --from=builder /app/build ./build
