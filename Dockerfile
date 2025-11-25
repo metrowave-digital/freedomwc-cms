@@ -1,65 +1,53 @@
 # ============================
-# 1. BASE IMAGE
+# 1. Base image
 # ============================
-FROM node:20 AS base
+FROM node:20-slim AS base
 WORKDIR /app
 
-# ============================
-# 2. INSTALL PNPM
-# ============================
+# Install pnpm globally
 RUN npm install -g pnpm
 
 # ============================
-# 3. INSTALL DEPENDENCIES
+# 2. Builder
 # ============================
-FROM base AS deps
+FROM base AS builder
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+# Copy only package files first
+COPY package.json pnpm-lock.yaml* ./
 
-# ❗️ NO --frozen-lockfile (Render fails with it)
+# Install dependencies (NO --frozen-lockfile)
 RUN pnpm install
 
-# ============================
-# 4. BUILD PHASE
-# ============================
-FROM deps AS builder
-WORKDIR /app
-
+# Copy the rest
 COPY . .
 
-# ----------------------------
-# BUILD PAYLOAD ADMIN
-# ----------------------------
-RUN pnpm payload build
-
-# ----------------------------
-# BUILD NEXT.JS
-# ----------------------------
+# Build Next.js (includes Payload Admin UI)
 RUN pnpm build
 
+
 # ============================
-# 5. RUNNER / PRODUCTION IMAGE
+# 3. Runner
 # ============================
 FROM base AS runner
+
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only what we need for production
+# Copy node_modules from builder
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
-# Payload Admin build output
-COPY --from=builder /app/build ./build
-
-# Next.js build output (.next)
+# Copy built next app
 COPY --from=builder /app/.next ./.next
 
-# Public folder
+# Copy public folder
 COPY --from=builder /app/public ./public
 
-# Start the Next.js server (Payload runs inside it)
+# Copy payload config + collections + globals
+COPY --from=builder /app/src ./src
+
+# Start server
 EXPOSE 3000
 CMD ["pnpm", "start"]
