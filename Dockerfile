@@ -1,53 +1,41 @@
-# -------------------------------------------------------
-# 1. Base builder image
-# -------------------------------------------------------
-FROM node:20 AS builder
+# ============================
+# 1. Builder
+# ============================
+FROM node:20-alpine AS builder
 
-# Disable prompts
-ENV CI=true
-
-# Create app directory
 WORKDIR /app
 
-# Copy package.json + lockfile
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ libc6-compat
+
 COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm globally
 RUN npm install -g pnpm
+RUN pnpm install --frozen-lockfile
 
-# Install dependencies (no dev pruning yet—Payload needs them)
-RUN pnpm install
-
-# Copy all source code
+# Copy source
 COPY . .
 
-# Build Payload Admin UI
-RUN pnpm build
+# Build Payload admin panel
+RUN pnpm payload build
 
-
-# -------------------------------------------------------
-# 2. Production image (thin)
-# -------------------------------------------------------
-FROM node:20 AS runner
-
+# ============================
+# 2. Runner (Production)
+# ============================
+FROM node:20-alpine AS runner
 WORKDIR /app
 
+RUN apk add --no-cache libc6-compat
+
 ENV NODE_ENV=production
-ENV PAYLOAD_CONFIG_PATH=dist/payload.config.js
 
-# Install pnpm globally
-RUN npm install -g pnpm
-
-# Copy only necessary runtime files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+# Copy only necessary files from builder
 COPY --from=builder /app/node_modules ./node_modules
-
-# IMPORTANT: Payload admin needs public folder
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/build ./build      # Payload admin build
+COPY --from=builder /app/public ./public    # static assets
+COPY --from=builder /app/src ./src          # your source code
+COPY package.json ./
 
 EXPOSE 3000
 
-# Run Payload in production mode
-CMD ["node", "dist/server.js"]
+# Payload runs via the "payload" CLI or server.js entry
+CMD ["node", "node_modules/payload/dist/bundles/server.js"]
