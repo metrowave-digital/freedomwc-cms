@@ -742,6 +742,7 @@ export interface ApiKey {
   id: number;
   label: string;
   key: string;
+  apiTags?: (number | Tag)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1329,6 +1330,7 @@ export interface BlogPostsSelect<T extends boolean = true> {
 export interface ApiKeysSelect<T extends boolean = true> {
   label?: T;
   key?: T;
+  apiTags?: T;
   updatedAt?: T;
   createdAt?: T;
 }

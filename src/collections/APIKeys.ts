@@ -16,20 +16,13 @@ export const APIKeys: CollectionConfig = {
   },
 
   access: {
-    read: () => false, // No one can publicly read API keys
+    read: () => false,
 
-    create: ({ req }) => {
-      // Prevent undefined return
-      return Boolean(req.user && Array.isArray(req.user.roles) && req.user.roles.includes('admin'))
-    },
+    create: ({ req }) => Boolean(req.user?.roles?.includes('admin')),
 
-    update: ({ req }) => {
-      return Boolean(req.user && Array.isArray(req.user.roles) && req.user.roles.includes('admin'))
-    },
+    update: ({ req }) => Boolean(req.user?.roles?.includes('admin')),
 
-    delete: ({ req }) => {
-      return Boolean(req.user && Array.isArray(req.user.roles) && req.user.roles.includes('admin'))
-    },
+    delete: ({ req }) => Boolean(req.user?.roles?.includes('admin')),
   },
 
   fields: [
@@ -38,24 +31,33 @@ export const APIKeys: CollectionConfig = {
       type: 'text',
       required: true,
     },
+
     {
       name: 'key',
       type: 'text',
       required: true,
-      admin: {
-        readOnly: true,
-      },
-
+      admin: { readOnly: true },
       hooks: {
         beforeValidate: [
           ({ data }) => {
-            if (!data) return data // fix undefined warning
+            if (!data) return data
             if (!data.key) {
               data.key = crypto.randomUUID().replace(/-/g, '')
             }
             return data
           },
         ],
+      },
+    },
+
+    // ⭐ THIS WAS MISSING
+    {
+      name: 'apiTags',
+      type: 'relationship',
+      relationTo: 'tags',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
       },
     },
   ],
