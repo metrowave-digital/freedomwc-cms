@@ -30,6 +30,7 @@ import { Sermons } from './collections/Sermons'
 import { Devotionals } from './collections/Devotionals'
 import { BlogPosts } from './collections/BlogPosts'
 import { Tags } from './collections/Tags'
+import { APIKeys } from './collections/APIKeys'
 
 /* -------------------------
  * GLOBALS
@@ -133,6 +134,7 @@ export default buildConfig({
     Sermons,
     Devotionals,
     BlogPosts,
+    APIKeys,
   ],
 
   /* ---- GLOBALS ---- */
