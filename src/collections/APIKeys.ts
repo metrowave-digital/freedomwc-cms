@@ -5,6 +5,16 @@ import crypto from 'crypto'
 export const APIKeys: CollectionConfig = {
   slug: 'api-keys',
 
+  labels: {
+    singular: 'API Key',
+    plural: 'API Keys',
+  },
+
+  admin: {
+    useAsTitle: 'label',
+    group: 'Access',
+  },
+
   access: {
     read: () => false, // No one can publicly read API keys
 
