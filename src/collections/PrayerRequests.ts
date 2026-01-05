@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 import { hasRoleAtLeast } from '../access/roles'
 
 export const PrayerRequests: CollectionConfig = {
@@ -27,16 +27,21 @@ export const PrayerRequests: CollectionConfig = {
      * - Owner can always read their own
      */
     read: ({ req }) => {
+      // Anonymous users → public only
       if (!req.user) {
         return {
           visibility: {
             equals: 'public',
           },
-        }
+        } as Where
       }
 
-      if (hasRoleAtLeast(req, 'leader')) return true
+      // Leader+ → unrestricted
+      if (hasRoleAtLeast(req, 'leader')) {
+        return true
+      }
 
+      // Logged-in, non-leader
       return {
         or: [
           {
@@ -51,11 +56,16 @@ export const PrayerRequests: CollectionConfig = {
           },
           {
             visibility: {
-              in: ['leaders', 'prayer-team'],
+              equals: 'leaders',
+            },
+          },
+          {
+            visibility: {
+              equals: 'prayer-team',
             },
           },
         ],
-      }
+      } as Where
     },
 
     /**

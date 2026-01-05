@@ -85,15 +85,16 @@ export const JournalEntries: CollectionConfig = {
       index: true,
       access: {
         create: ({ req, data }) => {
-          // Admin/Leader+ can create for anyone
+          // Leader+ can assign anyone
           if (hasRoleAtLeast(req, 'leader')) return true
-          // Otherwise must be the user themselves
+
+          // Otherwise user can only assign themselves
           return String(data?.user) === String(req.user?.id)
         },
-        update: ({ req, data, originalDoc }) => {
-          // Prevent changing ownership unless leader+
-          if (hasRoleAtLeast(req, 'leader')) return true
-          return String(originalDoc?.user) === String(req.user?.id)
+
+        update: ({ req }) => {
+          // Only leader+ can change ownership
+          return hasRoleAtLeast(req, 'leader')
         },
       },
     },
