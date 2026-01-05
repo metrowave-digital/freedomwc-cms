@@ -71,19 +71,37 @@ export interface Config {
     tags: Tag;
     media: Media;
     profiles: Profile;
+    'learner-profiles': LearnerProfile;
+    mentors: Mentor;
+    instructors: Instructor;
+    cohorts: Cohort;
     applications: Application;
     courses: Course;
     modules: Module;
     lessons: Lesson;
     assignments: Assignment;
-    'assignment-types': AssignmentType;
+    assessments: Assessment;
     submissions: Submission;
     enrollments: Enrollment;
+    progress: Progress;
+    'journal-entries': JournalEntry;
+    sessions: Session;
+    'enrollment-attendance': EnrollmentAttendance;
+    'pathways-programs': PathwaysProgram;
+    'pathways-phases': PathwaysPhase;
+    'weekly-experiences': WeeklyExperience;
+    'formation-practices': FormationPractice;
     'sermon-series': SermonSery;
     sermons: Sermon;
     'sermons-content': SermonsContent;
     devotionals: Devotional;
     'blog-posts': BlogPost;
+    resources: Resource;
+    events: Event;
+    'prayer-requests': PrayerRequest;
+    announcements: Announcement;
+    'user-notifications': UserNotification;
+    credentials: Credential;
     'api-keys': ApiKey;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -96,19 +114,37 @@ export interface Config {
     tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     profiles: ProfilesSelect<false> | ProfilesSelect<true>;
+    'learner-profiles': LearnerProfilesSelect<false> | LearnerProfilesSelect<true>;
+    mentors: MentorsSelect<false> | MentorsSelect<true>;
+    instructors: InstructorsSelect<false> | InstructorsSelect<true>;
+    cohorts: CohortsSelect<false> | CohortsSelect<true>;
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     modules: ModulesSelect<false> | ModulesSelect<true>;
     lessons: LessonsSelect<false> | LessonsSelect<true>;
     assignments: AssignmentsSelect<false> | AssignmentsSelect<true>;
-    'assignment-types': AssignmentTypesSelect<false> | AssignmentTypesSelect<true>;
+    assessments: AssessmentsSelect<false> | AssessmentsSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     enrollments: EnrollmentsSelect<false> | EnrollmentsSelect<true>;
+    progress: ProgressSelect<false> | ProgressSelect<true>;
+    'journal-entries': JournalEntriesSelect<false> | JournalEntriesSelect<true>;
+    sessions: SessionsSelect<false> | SessionsSelect<true>;
+    'enrollment-attendance': EnrollmentAttendanceSelect<false> | EnrollmentAttendanceSelect<true>;
+    'pathways-programs': PathwaysProgramsSelect<false> | PathwaysProgramsSelect<true>;
+    'pathways-phases': PathwaysPhasesSelect<false> | PathwaysPhasesSelect<true>;
+    'weekly-experiences': WeeklyExperiencesSelect<false> | WeeklyExperiencesSelect<true>;
+    'formation-practices': FormationPracticesSelect<false> | FormationPracticesSelect<true>;
     'sermon-series': SermonSeriesSelect<false> | SermonSeriesSelect<true>;
     sermons: SermonsSelect<false> | SermonsSelect<true>;
     'sermons-content': SermonsContentSelect<false> | SermonsContentSelect<true>;
     devotionals: DevotionalsSelect<false> | DevotionalsSelect<true>;
     'blog-posts': BlogPostsSelect<false> | BlogPostsSelect<true>;
+    resources: ResourcesSelect<false> | ResourcesSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    'prayer-requests': PrayerRequestsSelect<false> | PrayerRequestsSelect<true>;
+    announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
+    'user-notifications': UserNotificationsSelect<false> | UserNotificationsSelect<true>;
+    credentials: CredentialsSelect<false> | CredentialsSelect<true>;
     'api-keys': ApiKeysSelect<false> | ApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -158,13 +194,9 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   /**
-   * Auth0 user ID (e.g., auth0|123...)
+   * Auth0 subject (auth0|xxxx)
    */
   auth0Id?: string | null;
-  /**
-   * Synced from Auth0 → email_verified
-   */
-  emailVerified?: boolean | null;
   roles: (
     | 'admin'
     | 'pastor'
@@ -178,7 +210,7 @@ export interface User {
     | 'viewer'
   )[];
   /**
-   * Connect to user profile
+   * Canonical human profile (bio, testimony, formation).
    */
   profile?: (number | null) | Profile;
   updatedAt: string;
@@ -207,7 +239,7 @@ export interface Profile {
   id: number;
   displayName: string;
   /**
-   * Auto or manually set profile slug.
+   * Public profile slug
    */
   slug?: string | null;
   avatar?: (number | null) | Media;
@@ -245,26 +277,16 @@ export interface Profile {
         id?: string | null;
       }[]
     | null;
-  isMentor?: boolean | null;
+  isMentorCandidate?: boolean | null;
   leadershipTrackStatus?: ('none' | 'training' | 'serving' | 'leading') | null;
   leadershipNotes?: string | null;
-  social?: {
-    facebook?: string | null;
-    instagram?: string | null;
-    twitter?: string | null;
-    tiktok?: string | null;
-    website?: string | null;
-  };
-  contactPreference?: ('email' | 'call' | 'text') | null;
-  doNotContact?: boolean | null;
-  user?: (number | null) | User;
   accountabilityPartner?: (number | null) | Profile;
   accountabilityNotes?: string | null;
   pastorOrMinistryLead?: (number | null) | Profile;
   leaderNotes?: string | null;
-  enrollments?: (number | Enrollment)[] | null;
+  user?: (number | null) | User;
   /**
-   * Ministry / leadership roles for this person.
+   * Indicative roles only. Actual permissions come from Users.
    */
   roles?:
     | (
@@ -312,204 +334,6 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "enrollments".
- */
-export interface Enrollment {
-  id: number;
-  course: number | Course;
-  courseTitle?: string | null;
-  profile: number | Profile;
-  instructor?: (number | null) | Profile;
-  mentor?: (number | null) | Profile;
-  status?: ('enrolled' | 'in-progress' | 'completed' | 'withdrawn' | 'incomplete') | null;
-  progress?: number | null;
-  certificateIssued?: boolean | null;
-  startDate: string;
-  endDate?: string | null;
-  notes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "courses".
- */
-export interface Course {
-  id: number;
-  title: string;
-  slug?: string | null;
-  summary?: string | null;
-  description?: string | null;
-  courseType:
-    | 'pathways-phase'
-    | 'weekly-class'
-    | 'workshop'
-    | 'leadership-lab'
-    | 'mentorship'
-    | 'certification'
-    | 'module';
-  pathwaysPhase?: ('restore' | 'root' | 'rise' | 'release' | 'all' | 'none') | null;
-  modules?: (number | Module)[] | null;
-  instructors?: (number | Profile)[] | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  meetingDay?: string | null;
-  meetingTime?: string | null;
-  heroImage?: (number | null) | Media;
-  isActive?: boolean | null;
-  featured?: boolean | null;
-  publishedAt?: string | null;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "modules".
- */
-export interface Module {
-  id: number;
-  title: string;
-  slug?: string | null;
-  description?: string | null;
-  course: number | Course;
-  order?: number | null;
-  lessons?: (number | Lesson)[] | null;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "lessons".
- */
-export interface Lesson {
-  id: number;
-  title: string;
-  slug?: string | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  module: number | Module;
-  order?: number | null;
-  assignments?: (number | Assignment)[] | null;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "assignments".
- */
-export interface Assignment {
-  id: number;
-  title: string;
-  type?: (number | null) | AssignmentType;
-  lesson: number | Lesson;
-  instructions?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  scripture?: string | null;
-  reading?: string | null;
-  order?: number | null;
-  metadata?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "assignment-types".
- */
-export interface AssignmentType {
-  id: number;
-  label: string;
-  description?: string | null;
-  requiresSubmission?: boolean | null;
-  allowAttachments?: boolean | null;
-  allowTextEntry?: boolean | null;
-  metadata?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sermons".
  */
 export interface Sermon {
@@ -538,6 +362,592 @@ export interface Tag {
   slug?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "learner-profiles".
+ */
+export interface LearnerProfile {
+  id: number;
+  profile: number | Profile;
+  enrolledCourses?: (number | Course)[] | null;
+  activePathways?: (number | PathwaysProgram)[] | null;
+  credentialsEarned?: (number | Credential)[] | null;
+  learningGoals?: string | null;
+  /**
+   * Internal learning notes (not visible to learner by default).
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses".
+ */
+export interface Course {
+  id: number;
+  title: string;
+  slug?: string | null;
+  shortDescription: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  courseType: 'biblical' | 'theology' | 'leadership' | 'formation' | 'life-skills' | 'ministry' | 'vocational';
+  level?: ('intro' | 'intermediate' | 'advanced') | null;
+  format?: ('self-paced' | 'cohort' | 'hybrid') | null;
+  estimatedDuration?: {
+    weeks?: number | null;
+    hours?: number | null;
+  };
+  learningObjectives?:
+    | {
+        objective: string;
+        id?: string | null;
+      }[]
+    | null;
+  modules?: (number | Module)[] | null;
+  prerequisites?: (number | Course)[] | null;
+  instructors?: (number | Instructor)[] | null;
+  credentials?: (number | Credential)[] | null;
+  /**
+   * Mark if this course is required or optional in a Pathways program.
+   */
+  usedInPathways?: boolean | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  featuredImage?: (number | null) | Media;
+  resources?: (number | Resource)[] | null;
+  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  publishedAt?: string | null;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "modules".
+ */
+export interface Module {
+  id: number;
+  title: string;
+  overview?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Controls the order of modules within a course.
+   */
+  order: number;
+  course: number | Course;
+  /**
+   * Lessons contained within this module.
+   */
+  lessons?: (number | Lesson)[] | null;
+  learningObjectives?:
+    | {
+        objective: string;
+        id?: string | null;
+      }[]
+    | null;
+  unlockType?: ('sequential' | 'date' | 'manual' | 'open') | null;
+  unlockDate?: string | null;
+  /**
+   * Roles allowed to manually unlock this module for learners.
+   */
+  manualUnlockRoles?: ('admin' | 'pastor' | 'leader' | 'instructor')[] | null;
+  /**
+   * Indicates this module is used within a Pathways phase.
+   */
+  usedInPathways?: boolean | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  visibility?: ('public' | 'enrolled' | 'cohort') | null;
+  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lessons".
+ */
+export interface Lesson {
+  id: number;
+  title: string;
+  summary?: string | null;
+  /**
+   * Controls lesson order within the module.
+   */
+  order: number;
+  module: number | Module;
+  lessonType: 'video' | 'reading' | 'devotional' | 'discussion' | 'assignment' | 'assessment' | 'practice';
+  /**
+   * Primary lesson content (text, scripture, images, embeds).
+   */
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  media?: {
+    video?: (number | null) | Media;
+    audio?: (number | null) | Media;
+  };
+  scriptureFocus?:
+    | {
+        reference: string;
+        translation?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Prompt for journaling or personal reflection.
+   */
+  reflectionPrompt?: string | null;
+  /**
+   * Estimated completion time in minutes.
+   */
+  estimatedTime?: number | null;
+  /**
+   * Must this lesson be completed to progress?
+   */
+  completionRequired?: boolean | null;
+  assignment?: (number | null) | Assignment;
+  assessment?: (number | null) | Assessment;
+  /**
+   * Controls what mentors can see for this lesson.
+   */
+  mentorVisibility?: ('summary' | 'full' | 'reflection') | null;
+  usedInPathways?: boolean | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  visibility?: ('public' | 'enrolled' | 'cohort') | null;
+  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "assignments".
+ */
+export interface Assignment {
+  id: number;
+  title: string;
+  /**
+   * Full assignment instructions visible to learners.
+   */
+  instructions: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  lesson: number | Lesson;
+  assignmentType: 'reflection' | 'short-answer' | 'essay' | 'project' | 'discussion' | 'practice' | 'file';
+  submissionType?: ('text' | 'file' | 'link' | 'mixed') | null;
+  allowMultipleSubmissions?: boolean | null;
+  dueType?: ('none' | 'fixed' | 'relative') | null;
+  dueDate?: string | null;
+  dueAfterDays?: number | null;
+  gradingType?: ('completion' | 'pass-fail' | 'scored') | null;
+  passingScore?: number | null;
+  rubric?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  mentorFeedbackEnabled?: boolean | null;
+  usedInPathways?: boolean | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pathways-phases".
+ */
+export interface PathwaysPhase {
+  id: number;
+  /**
+   * Example: "Phase 1 – Restore"
+   */
+  title: string;
+  /**
+   * Controls progression order within the program.
+   */
+  order: number;
+  program: number | PathwaysProgram;
+  /**
+   * Theme word or phrase (e.g. Healing, Identity, Calling).
+   */
+  theme?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  requiredCourses?: (number | Course)[] | null;
+  requiredModules?: (number | Module)[] | null;
+  requiredLessons?: (number | Lesson)[] | null;
+  requiredAssignments?: (number | Assignment)[] | null;
+  requiredAssessments?: (number | Assessment)[] | null;
+  formationPractices?:
+    | {
+        practice: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  completionRule?: ('all-required' | 'percentage' | 'mentor-approval') | null;
+  requiredCompletionPercentage?: number | null;
+  mentorReviewRequired?: boolean | null;
+  pastorApprovalRequired?: boolean | null;
+  status?: ('active' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pathways-programs".
+ */
+export interface PathwaysProgram {
+  id: number;
+  /**
+   * Example: "Pathways Discipleship Journey"
+   */
+  title: string;
+  /**
+   * URL-safe identifier (manual or generated).
+   */
+  slug?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  targetAudience?: ('new-believers' | 'members' | 'leaders' | 'ministry' | 'general')[] | null;
+  /**
+   * Spiritual intent of this program (formation goal, not curriculum).
+   */
+  spiritualFocus?: string | null;
+  /**
+   * Ordered phases that make up this Pathways program.
+   */
+  phases?: (number | PathwaysPhase)[] | null;
+  estimatedDurationWeeks?: number | null;
+  /**
+   * If enabled, users must be enrolled to participate.
+   */
+  requiresEnrollment?: boolean | null;
+  requiresMentor?: boolean | null;
+  status?: ('draft' | 'active' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "assessments".
+ */
+export interface Assessment {
+  id: number;
+  title: string;
+  /**
+   * Instructions or overview shown before the assessment begins.
+   */
+  description?: string | null;
+  lesson: number | Lesson;
+  assessmentType: 'quiz' | 'exam' | 'scripture' | 'review';
+  /**
+   * Optional time limit (minutes). Leave blank for untimed.
+   */
+  timeLimitMinutes?: number | null;
+  allowRetakes?: boolean | null;
+  maxAttempts?: number | null;
+  passingScore?: number | null;
+  questions: {
+    questionText: string;
+    questionType: 'multiple-choice' | 'true-false' | 'short-answer' | 'scripture';
+    options?:
+      | {
+          optionText: string;
+          isCorrect?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    correctAnswer?: string | null;
+    points?: number | null;
+    id?: string | null;
+  }[];
+  usedInPathways?: boolean | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "instructors".
+ */
+export interface Instructor {
+  id: number;
+  profile: number | Profile;
+  coursesTaught?: (number | Course)[] | null;
+  credentials?: (number | Credential)[] | null;
+  instructorNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credentials".
+ */
+export interface Credential {
+  id: number;
+  /**
+   * Example: "Pathways Leadership Certificate" or "Ministry Foundations Credential".
+   */
+  title: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  credentialType: 'certificate' | 'ministry' | 'leadership' | 'badge';
+  issuingBody?: ('commons' | 'pathways' | 'fcf') | null;
+  requiredCourses?: (number | Course)[] | null;
+  requiredPathwaysProgram?: (number | null) | PathwaysProgram;
+  requiredPathwaysPhase?: (number | null) | PathwaysPhase;
+  requiredAssignments?: (number | Assignment)[] | null;
+  requiredAssessments?: (number | Assessment)[] | null;
+  /**
+   * Optional minimum assessment score required.
+   */
+  minimumScore?: number | null;
+  mentorApprovalRequired?: boolean | null;
+  /**
+   * If enabled, credential is automatically awarded when requirements are met.
+   */
+  autoAward?: boolean | null;
+  requiresPastorApproval?: boolean | null;
+  /**
+   * Optional certificate PDF or image template.
+   */
+  certificateTemplate?: (number | null) | Media;
+  expires?: boolean | null;
+  expirationMonths?: number | null;
+  visibility?: ('public' | 'internal' | 'private') | null;
+  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resources".
+ */
+export interface Resource {
+  id: number;
+  title: string;
+  description?: string | null;
+  resourceType: 'document' | 'audio' | 'video' | 'image' | 'link' | 'devotional';
+  file?: (number | null) | Media;
+  externalUrl?: string | null;
+  categories?:
+    | ('sermons' | 'bible-study' | 'prayer' | 'devotional' | 'leadership' | 'youth' | 'outreach' | 'general')[]
+    | null;
+  relatedCourses?: (number | Course)[] | null;
+  relatedPathwaysPhases?: (number | PathwaysPhase)[] | null;
+  relatedMinistries?: ('worship' | 'youth' | 'outreach' | 'media' | 'prayer')[] | null;
+  visibility?: ('public' | 'members' | 'leaders' | 'private') | null;
+  status?: ('active' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mentors".
+ */
+export interface Mentor {
+  id: number;
+  profile: number | Profile;
+  assignedCohorts?: (number | Cohort)[] | null;
+  /**
+   * Profiles this mentor is directly responsible for.
+   */
+  assignedLearners?: (number | Profile)[] | null;
+  availability?: ('limited' | 'moderate' | 'open') | null;
+  mentorNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cohorts".
+ */
+export interface Cohort {
+  id: number;
+  /**
+   * Example: "Pathways Leadership – Fall 2026 (Cohort A)"
+   */
+  name: string;
+  description?: string | null;
+  pathwaysProgram: number | PathwaysProgram;
+  pathwaysPhase: number | PathwaysPhase;
+  startDate: string;
+  endDate?: string | null;
+  /**
+   * Example: "Sundays at 10:30am (in person)" or "Tuesdays on Zoom"
+   */
+  meetingSchedule?: string | null;
+  /**
+   * Assigned mentors/coaches for this cohort.
+   */
+  mentors?: (number | User)[] | null;
+  /**
+   * Facilitators or instructors guiding sessions.
+   */
+  facilitators?: (number | User)[] | null;
+  /**
+   * Participants enrolled in this cohort.
+   */
+  members?: (number | User)[] | null;
+  /**
+   * Optional: courses this cohort focuses on (overrides default Pathways mapping).
+   */
+  courses?: (number | Course)[] | null;
+  /**
+   * Optional: specific modules emphasized for this cohort.
+   */
+  modules?: (number | Module)[] | null;
+  visibility?: ('private' | 'members' | 'public') | null;
+  status?: ('planned' | 'active' | 'completed' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -599,6 +1009,332 @@ export interface Submission {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enrollments".
+ */
+export interface Enrollment {
+  id: number;
+  course: number | Course;
+  courseTitle?: string | null;
+  /**
+   * Canonical person profile being enrolled.
+   */
+  profile: number | Profile;
+  /**
+   * Linked learner profile (optional but recommended).
+   */
+  learnerProfile?: (number | null) | LearnerProfile;
+  /**
+   * Primary instructor for this enrollment.
+   */
+  instructor?: (number | null) | Profile;
+  /**
+   * Assigned mentor or coach for formation support.
+   */
+  mentor?: (number | null) | Profile;
+  cohort?: (number | null) | Cohort;
+  pathwaysProgram?: (number | null) | PathwaysProgram;
+  pathwaysPhase?: (number | null) | PathwaysPhase;
+  status?: ('enrolled' | 'in-progress' | 'completed' | 'withdrawn' | 'incomplete') | null;
+  /**
+   * High-level progress indicator (detail lives in Progress collection).
+   */
+  progress?: number | null;
+  certificateIssued?: boolean | null;
+  startDate: string;
+  endDate?: string | null;
+  /**
+   * Administrative or pastoral notes about this enrollment.
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "progress".
+ */
+export interface Progress {
+  id: number;
+  user: number | User;
+  course?: (number | null) | Course;
+  module?: (number | null) | Module;
+  lesson?: (number | null) | Lesson;
+  assignment?: (number | null) | Assignment;
+  assessment?: (number | null) | Assessment;
+  pathwaysProgram?: (number | null) | PathwaysProgram;
+  pathwaysPhase?: (number | null) | PathwaysPhase;
+  status: 'not-started' | 'in-progress' | 'completed' | 'submitted' | 'passed' | 'failed';
+  startedAt?: string | null;
+  completedAt?: string | null;
+  score?: number | null;
+  attempts?: number | null;
+  submission?: {
+    textResponse?: string | null;
+    file?: (number | null) | Media;
+    externalLink?: string | null;
+    submittedAt?: string | null;
+  };
+  feedback?: {
+    comment?: string | null;
+    reviewedBy?: (number | null) | User;
+    reviewedAt?: string | null;
+  };
+  /**
+   * Optional linked journal entry for reflection-based lessons.
+   */
+  reflectionEntry?: (number | null) | JournalEntry;
+  /**
+   * Prevents further changes (used after final review).
+   */
+  isLocked?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "journal-entries".
+ */
+export interface JournalEntry {
+  id: number;
+  user: number | User;
+  /**
+   * Short title for the reflection (e.g., "Week 2 Reflection" or "James 2:1–11").
+   */
+  title: string;
+  /**
+   * Optional prompt that the learner is responding to (lesson prompt / mentor prompt).
+   */
+  prompt?: string | null;
+  entry: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  lesson?: (number | null) | Lesson;
+  assignment?: (number | null) | Assignment;
+  course?: (number | null) | Course;
+  module?: (number | null) | Module;
+  pathwaysProgram?: (number | null) | PathwaysProgram;
+  pathwaysPhase?: (number | null) | PathwaysPhase;
+  /**
+   * If this reflection is tied to a specific cohort/group.
+   */
+  cohort?: (number | null) | Cohort;
+  /**
+   * Optional: link to the Progress record this reflection supports.
+   */
+  progressRecord?: (number | null) | Progress;
+  /**
+   * Controls who can view this entry. Private is safest by default.
+   */
+  visibility: 'private' | 'mentor' | 'cohort' | 'public';
+  feedback?: {
+    mentorComment?: string | null;
+    reviewStatus?: ('not-reviewed' | 'reviewed' | 'needs-follow-up') | null;
+    reviewedBy?: (number | null) | User;
+    reviewedAt?: string | null;
+  };
+  status?: ('active' | 'archived' | 'flagged') | null;
+  flagReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions".
+ */
+export interface Session {
+  id: number;
+  title: string;
+  description?: string | null;
+  sessionType: 'course' | 'cohort' | 'weekly-experience' | 'workshop';
+  course?: (number | null) | Course;
+  cohort?: (number | null) | Cohort;
+  weeklyExperience?: (number | null) | WeeklyExperience;
+  startDateTime: string;
+  endDateTime?: string | null;
+  deliveryMode?: ('in-person' | 'virtual' | 'hybrid') | null;
+  location?: string | null;
+  virtualLink?: string | null;
+  facilitators?: (number | Profile)[] | null;
+  /**
+   * If false, attendance will not affect progress.
+   */
+  attendanceRequired?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weekly-experiences".
+ */
+export interface WeeklyExperience {
+  id: number;
+  /**
+   * Example: "Week 3 – Healing the Inner Self"
+   */
+  title: string;
+  weekNumber: number;
+  pathwaysPhase: number | PathwaysPhase;
+  /**
+   * Weekly theme or focus word (e.g. Identity, Healing, Calling).
+   */
+  theme?: string | null;
+  scriptureFocus?:
+    | {
+        reference: string;
+        translation?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Teaching, devotional content, or weekly lesson.
+   */
+  teachingContent?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  relatedLessons?: (number | Lesson)[] | null;
+  /**
+   * Practices participants should engage this week.
+   */
+  formationPractices?: (number | FormationPractice)[] | null;
+  reflectionQuestions?:
+    | {
+        question: string;
+        id?: string | null;
+      }[]
+    | null;
+  journalRequired?: boolean | null;
+  /**
+   * Cohort or small-group activity for this week.
+   */
+  groupActivity?: string | null;
+  /**
+   * Private notes or guidance for mentors facilitating this week.
+   */
+  mentorGuidance?: string | null;
+  completionRequired?: boolean | null;
+  estimatedTimeMinutes?: number | null;
+  status?: ('active' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "formation-practices".
+ */
+export interface FormationPractice {
+  id: number;
+  /**
+   * Example: Prayer, Fasting, Sankofa Reflection
+   */
+  title: string;
+  /**
+   * Optional URL-safe identifier.
+   */
+  slug?: string | null;
+  practiceType: 'spiritual' | 'embodied' | 'communal' | 'justice' | 'reflective';
+  /**
+   * What this practice is and why it matters spiritually.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * How to practice this (step-by-step or guided).
+   */
+  instructions?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  scriptureReferences?:
+    | {
+        reference: string;
+        translation?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional theological framing or pastoral note.
+   */
+  theologicalReflection?: string | null;
+  suggestedJournalPrompt?: string | null;
+  requiresJournalEntry?: boolean | null;
+  usedInPathways?: boolean | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  status?: ('active' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enrollment-attendance".
+ */
+export interface EnrollmentAttendance {
+  id: number;
+  enrollment: number | Enrollment;
+  session: number | Session;
+  profile: number | Profile;
+  attendanceStatus: 'present' | 'late' | 'excused' | 'absent';
+  attendanceMode?: ('in-person' | 'virtual') | null;
+  recordedBy?: (number | null) | User;
+  recordedAt?: string | null;
+  /**
+   * Pastoral or instructional context for this record.
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -671,6 +1407,9 @@ export interface Devotional {
   id: number;
   title: string;
   slug?: string | null;
+  /**
+   * Primary scripture reference
+   */
   scripture?: string | null;
   body: {
     root: {
@@ -687,8 +1426,16 @@ export interface Devotional {
     };
     [k: string]: unknown;
   };
+  /**
+   * Optional prompt for journaling or reflection.
+   */
+  reflectionPrompt?: string | null;
   author?: (number | null) | User;
   date: string;
+  formationPractices?: (number | FormationPractice)[] | null;
+  pathwaysPhases?: (number | PathwaysPhase)[] | null;
+  relatedResources?: (number | Resource)[] | null;
+  visibility?: ('public' | 'members' | 'leaders') | null;
   seo?: {
     metaTitle?: string | null;
     metaDescription?: string | null;
@@ -731,6 +1478,145 @@ export interface BlogPost {
     openGraphImage?: (number | null) | Sermon;
     canonicalURL?: string | null;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  description?: string | null;
+  eventType: 'church' | 'prayer-call' | 'workshop' | 'retreat' | 'service';
+  startDate: string;
+  endDate?: string | null;
+  location?: string | null;
+  virtualLink?: string | null;
+  facilitators?: (number | Profile)[] | null;
+  /**
+   * Theme, scripture, or intention for prayer calls.
+   */
+  spiritualFocus?: string | null;
+  /**
+   * Optional prayer requests to highlight.
+   */
+  relatedPrayerRequests?: (number | PrayerRequest)[] | null;
+  /**
+   * If checked, a Session should be created for attendance.
+   */
+  requiresSession?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "prayer-requests".
+ */
+export interface PrayerRequest {
+  id: number;
+  /**
+   * Person submitting the prayer request.
+   */
+  profile: number | Profile;
+  /**
+   * Short summary (shown in lists).
+   */
+  summary: string;
+  /**
+   * Full prayer request details.
+   */
+  request: string;
+  visibility: 'private' | 'leaders' | 'prayer-team' | 'public';
+  /**
+   * May leaders/prayer team follow up?
+   */
+  allowFollowUp?: boolean | null;
+  status?: ('active' | 'answered' | 'ongoing' | 'closed') | null;
+  /**
+   * Optional testimony when prayer is answered.
+   */
+  answerTestimony?: string | null;
+  answeredAt?: string | null;
+  /**
+   * Optional prayer call or gathering connected to this request.
+   */
+  relatedEvent?: (number | null) | Event;
+  /**
+   * Leader or pastor assigned for follow-up.
+   */
+  assignedLeader?: (number | null) | Profile;
+  /**
+   * Internal pastoral notes (leaders only).
+   */
+  followUpNotes?: string | null;
+  followUpDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcements".
+ */
+export interface Announcement {
+  id: number;
+  title: string;
+  message: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  priority?: ('low' | 'normal' | 'high' | 'urgent') | null;
+  audience: ('all' | 'members' | 'leaders' | 'learners' | 'mentors' | 'instructors')[];
+  relatedMinistries?: ('worship' | 'youth' | 'outreach' | 'prayer' | 'media')[] | null;
+  relatedCourse?: (number | null) | Course;
+  relatedPathwayPhase?: (number | null) | PathwaysPhase;
+  displayLocations?: ('homepage' | 'church-dashboard' | 'lms-dashboard' | 'pathways' | 'email')[] | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  status?: ('active' | 'scheduled' | 'expired' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "user-notifications".
+ */
+export interface UserNotification {
+  id: number;
+  user: number | User;
+  title: string;
+  message: string;
+  notificationType: 'announcement' | 'pathways' | 'lms' | 'credential' | 'mentor' | 'system';
+  announcement?: (number | null) | Announcement;
+  resource?: (number | null) | Resource;
+  course?: (number | null) | Course;
+  pathwaysProgram?: (number | null) | PathwaysProgram;
+  pathwaysPhase?: (number | null) | PathwaysPhase;
+  enrollment?: (number | null) | Enrollment;
+  credential?: (number | null) | Credential;
+  read?: boolean | null;
+  /**
+   * Timestamp when the user opened the notification.
+   */
+  readAt?: string | null;
+  deliveryChannels?: ('in-app' | 'email' | 'push' | 'sms')[] | null;
+  /**
+   * Optional expiration (notification auto-hidden after this date).
+   */
+  expiresAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -787,6 +1673,22 @@ export interface PayloadLockedDocument {
         value: number | Profile;
       } | null)
     | ({
+        relationTo: 'learner-profiles';
+        value: number | LearnerProfile;
+      } | null)
+    | ({
+        relationTo: 'mentors';
+        value: number | Mentor;
+      } | null)
+    | ({
+        relationTo: 'instructors';
+        value: number | Instructor;
+      } | null)
+    | ({
+        relationTo: 'cohorts';
+        value: number | Cohort;
+      } | null)
+    | ({
         relationTo: 'applications';
         value: number | Application;
       } | null)
@@ -807,8 +1709,8 @@ export interface PayloadLockedDocument {
         value: number | Assignment;
       } | null)
     | ({
-        relationTo: 'assignment-types';
-        value: number | AssignmentType;
+        relationTo: 'assessments';
+        value: number | Assessment;
       } | null)
     | ({
         relationTo: 'submissions';
@@ -817,6 +1719,38 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'enrollments';
         value: number | Enrollment;
+      } | null)
+    | ({
+        relationTo: 'progress';
+        value: number | Progress;
+      } | null)
+    | ({
+        relationTo: 'journal-entries';
+        value: number | JournalEntry;
+      } | null)
+    | ({
+        relationTo: 'sessions';
+        value: number | Session;
+      } | null)
+    | ({
+        relationTo: 'enrollment-attendance';
+        value: number | EnrollmentAttendance;
+      } | null)
+    | ({
+        relationTo: 'pathways-programs';
+        value: number | PathwaysProgram;
+      } | null)
+    | ({
+        relationTo: 'pathways-phases';
+        value: number | PathwaysPhase;
+      } | null)
+    | ({
+        relationTo: 'weekly-experiences';
+        value: number | WeeklyExperience;
+      } | null)
+    | ({
+        relationTo: 'formation-practices';
+        value: number | FormationPractice;
       } | null)
     | ({
         relationTo: 'sermon-series';
@@ -837,6 +1771,30 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'blog-posts';
         value: number | BlogPost;
+      } | null)
+    | ({
+        relationTo: 'resources';
+        value: number | Resource;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'prayer-requests';
+        value: number | PrayerRequest;
+      } | null)
+    | ({
+        relationTo: 'announcements';
+        value: number | Announcement;
+      } | null)
+    | ({
+        relationTo: 'user-notifications';
+        value: number | UserNotification;
+      } | null)
+    | ({
+        relationTo: 'credentials';
+        value: number | Credential;
       } | null)
     | ({
         relationTo: 'api-keys';
@@ -890,7 +1848,6 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   auth0Id?: T;
-  emailVerified?: T;
   roles?: T;
   profile?: T;
   updatedAt?: T;
@@ -967,26 +1924,14 @@ export interface ProfilesSelect<T extends boolean = true> {
         earnedDate?: T;
         id?: T;
       };
-  isMentor?: T;
+  isMentorCandidate?: T;
   leadershipTrackStatus?: T;
   leadershipNotes?: T;
-  social?:
-    | T
-    | {
-        facebook?: T;
-        instagram?: T;
-        twitter?: T;
-        tiktok?: T;
-        website?: T;
-      };
-  contactPreference?: T;
-  doNotContact?: T;
-  user?: T;
   accountabilityPartner?: T;
   accountabilityNotes?: T;
   pastorOrMinistryLead?: T;
   leaderNotes?: T;
-  enrollments?: T;
+  user?: T;
   roles?: T;
   seo?:
     | T
@@ -998,6 +1943,68 @@ export interface ProfilesSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "learner-profiles_select".
+ */
+export interface LearnerProfilesSelect<T extends boolean = true> {
+  profile?: T;
+  enrolledCourses?: T;
+  activePathways?: T;
+  credentialsEarned?: T;
+  learningGoals?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mentors_select".
+ */
+export interface MentorsSelect<T extends boolean = true> {
+  profile?: T;
+  assignedCohorts?: T;
+  assignedLearners?: T;
+  availability?: T;
+  mentorNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "instructors_select".
+ */
+export interface InstructorsSelect<T extends boolean = true> {
+  profile?: T;
+  coursesTaught?: T;
+  credentials?: T;
+  instructorNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cohorts_select".
+ */
+export interface CohortsSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  pathwaysProgram?: T;
+  pathwaysPhase?: T;
+  startDate?: T;
+  endDate?: T;
+  meetingSchedule?: T;
+  mentors?: T;
+  facilitators?: T;
+  members?: T;
+  courses?: T;
+  modules?: T;
+  visibility?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1037,23 +2044,37 @@ export interface ApplicationsSelect<T extends boolean = true> {
 export interface CoursesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  summary?: T;
+  shortDescription?: T;
   description?: T;
   courseType?: T;
-  pathwaysPhase?: T;
+  level?: T;
+  format?: T;
+  estimatedDuration?:
+    | T
+    | {
+        weeks?: T;
+        hours?: T;
+      };
+  learningObjectives?:
+    | T
+    | {
+        objective?: T;
+        id?: T;
+      };
   modules?: T;
+  prerequisites?: T;
   instructors?: T;
-  startDate?: T;
-  endDate?: T;
-  meetingDay?: T;
-  meetingTime?: T;
-  heroImage?: T;
-  isActive?: T;
-  featured?: T;
+  credentials?: T;
+  usedInPathways?: T;
+  pathwaysPhases?: T;
+  featuredImage?: T;
+  resources?: T;
+  status?: T;
   publishedAt?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
   url?: T;
   thumbnailURL?: T;
   filename?: T;
@@ -1070,14 +2091,27 @@ export interface CoursesSelect<T extends boolean = true> {
  */
 export interface ModulesSelect<T extends boolean = true> {
   title?: T;
-  slug?: T;
-  description?: T;
-  course?: T;
+  overview?: T;
   order?: T;
+  course?: T;
   lessons?: T;
+  learningObjectives?:
+    | T
+    | {
+        objective?: T;
+        id?: T;
+      };
+  unlockType?: T;
+  unlockDate?: T;
+  manualUnlockRoles?: T;
+  usedInPathways?: T;
+  pathwaysPhases?: T;
+  visibility?: T;
+  status?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
   url?: T;
   thumbnailURL?: T;
   filename?: T;
@@ -1094,14 +2128,38 @@ export interface ModulesSelect<T extends boolean = true> {
  */
 export interface LessonsSelect<T extends boolean = true> {
   title?: T;
-  slug?: T;
-  content?: T;
-  module?: T;
+  summary?: T;
   order?: T;
-  assignments?: T;
+  module?: T;
+  lessonType?: T;
+  content?: T;
+  media?:
+    | T
+    | {
+        video?: T;
+        audio?: T;
+      };
+  scriptureFocus?:
+    | T
+    | {
+        reference?: T;
+        translation?: T;
+        id?: T;
+      };
+  reflectionPrompt?: T;
+  estimatedTime?: T;
+  completionRequired?: T;
+  assignment?: T;
+  assessment?: T;
+  mentorVisibility?: T;
+  usedInPathways?: T;
+  pathwaysPhases?: T;
+  visibility?: T;
+  status?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
   url?: T;
   thumbnailURL?: T;
   filename?: T;
@@ -1118,16 +2176,25 @@ export interface LessonsSelect<T extends boolean = true> {
  */
 export interface AssignmentsSelect<T extends boolean = true> {
   title?: T;
-  type?: T;
-  lesson?: T;
   instructions?: T;
-  scripture?: T;
-  reading?: T;
-  order?: T;
-  metadata?: T;
+  lesson?: T;
+  assignmentType?: T;
+  submissionType?: T;
+  allowMultipleSubmissions?: T;
+  dueType?: T;
+  dueDate?: T;
+  dueAfterDays?: T;
+  gradingType?: T;
+  passingScore?: T;
+  rubric?: T;
+  mentorFeedbackEnabled?: T;
+  usedInPathways?: T;
+  pathwaysPhases?: T;
+  status?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
   url?: T;
   thumbnailURL?: T;
   filename?: T;
@@ -1140,17 +2207,39 @@ export interface AssignmentsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "assignment-types_select".
+ * via the `definition` "assessments_select".
  */
-export interface AssignmentTypesSelect<T extends boolean = true> {
-  label?: T;
+export interface AssessmentsSelect<T extends boolean = true> {
+  title?: T;
   description?: T;
-  requiresSubmission?: T;
-  allowAttachments?: T;
-  allowTextEntry?: T;
-  metadata?: T;
+  lesson?: T;
+  assessmentType?: T;
+  timeLimitMinutes?: T;
+  allowRetakes?: T;
+  maxAttempts?: T;
+  passingScore?: T;
+  questions?:
+    | T
+    | {
+        questionText?: T;
+        questionType?: T;
+        options?:
+          | T
+          | {
+              optionText?: T;
+              isCorrect?: T;
+              id?: T;
+            };
+        correctAnswer?: T;
+        points?: T;
+        id?: T;
+      };
+  usedInPathways?: T;
+  pathwaysPhases?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1188,14 +2277,234 @@ export interface EnrollmentsSelect<T extends boolean = true> {
   course?: T;
   courseTitle?: T;
   profile?: T;
+  learnerProfile?: T;
   instructor?: T;
   mentor?: T;
+  cohort?: T;
+  pathwaysProgram?: T;
+  pathwaysPhase?: T;
   status?: T;
   progress?: T;
   certificateIssued?: T;
   startDate?: T;
   endDate?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "progress_select".
+ */
+export interface ProgressSelect<T extends boolean = true> {
+  user?: T;
+  course?: T;
+  module?: T;
+  lesson?: T;
+  assignment?: T;
+  assessment?: T;
+  pathwaysProgram?: T;
+  pathwaysPhase?: T;
+  status?: T;
+  startedAt?: T;
+  completedAt?: T;
+  score?: T;
+  attempts?: T;
+  submission?:
+    | T
+    | {
+        textResponse?: T;
+        file?: T;
+        externalLink?: T;
+        submittedAt?: T;
+      };
+  feedback?:
+    | T
+    | {
+        comment?: T;
+        reviewedBy?: T;
+        reviewedAt?: T;
+      };
+  reflectionEntry?: T;
+  isLocked?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "journal-entries_select".
+ */
+export interface JournalEntriesSelect<T extends boolean = true> {
+  user?: T;
+  title?: T;
+  prompt?: T;
+  entry?: T;
+  lesson?: T;
+  assignment?: T;
+  course?: T;
+  module?: T;
+  pathwaysProgram?: T;
+  pathwaysPhase?: T;
+  cohort?: T;
+  progressRecord?: T;
+  visibility?: T;
+  feedback?:
+    | T
+    | {
+        mentorComment?: T;
+        reviewStatus?: T;
+        reviewedBy?: T;
+        reviewedAt?: T;
+      };
+  status?: T;
+  flagReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions_select".
+ */
+export interface SessionsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  sessionType?: T;
+  course?: T;
+  cohort?: T;
+  weeklyExperience?: T;
+  startDateTime?: T;
+  endDateTime?: T;
+  deliveryMode?: T;
+  location?: T;
+  virtualLink?: T;
+  facilitators?: T;
+  attendanceRequired?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enrollment-attendance_select".
+ */
+export interface EnrollmentAttendanceSelect<T extends boolean = true> {
+  enrollment?: T;
+  session?: T;
+  profile?: T;
+  attendanceStatus?: T;
+  attendanceMode?: T;
+  recordedBy?: T;
+  recordedAt?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pathways-programs_select".
+ */
+export interface PathwaysProgramsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  targetAudience?: T;
+  spiritualFocus?: T;
+  phases?: T;
+  estimatedDurationWeeks?: T;
+  requiresEnrollment?: T;
+  requiresMentor?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pathways-phases_select".
+ */
+export interface PathwaysPhasesSelect<T extends boolean = true> {
+  title?: T;
+  order?: T;
+  program?: T;
+  theme?: T;
+  description?: T;
+  requiredCourses?: T;
+  requiredModules?: T;
+  requiredLessons?: T;
+  requiredAssignments?: T;
+  requiredAssessments?: T;
+  formationPractices?:
+    | T
+    | {
+        practice?: T;
+        description?: T;
+        id?: T;
+      };
+  completionRule?: T;
+  requiredCompletionPercentage?: T;
+  mentorReviewRequired?: T;
+  pastorApprovalRequired?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weekly-experiences_select".
+ */
+export interface WeeklyExperiencesSelect<T extends boolean = true> {
+  title?: T;
+  weekNumber?: T;
+  pathwaysPhase?: T;
+  theme?: T;
+  scriptureFocus?:
+    | T
+    | {
+        reference?: T;
+        translation?: T;
+        id?: T;
+      };
+  teachingContent?: T;
+  relatedLessons?: T;
+  formationPractices?: T;
+  reflectionQuestions?:
+    | T
+    | {
+        question?: T;
+        id?: T;
+      };
+  journalRequired?: T;
+  groupActivity?: T;
+  mentorGuidance?: T;
+  completionRequired?: T;
+  estimatedTimeMinutes?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "formation-practices_select".
+ */
+export interface FormationPracticesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  practiceType?: T;
+  description?: T;
+  instructions?: T;
+  scriptureReferences?:
+    | T
+    | {
+        reference?: T;
+        translation?: T;
+        id?: T;
+      };
+  theologicalReflection?: T;
+  suggestedJournalPrompt?: T;
+  requiresJournalEntry?: T;
+  usedInPathways?: T;
+  pathwaysPhases?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1287,8 +2596,13 @@ export interface DevotionalsSelect<T extends boolean = true> {
   slug?: T;
   scripture?: T;
   body?: T;
+  reflectionPrompt?: T;
   author?: T;
   date?: T;
+  formationPractices?: T;
+  pathwaysPhases?: T;
+  relatedResources?: T;
+  visibility?: T;
   seo?:
     | T
     | {
@@ -1322,6 +2636,134 @@ export interface BlogPostsSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "resources_select".
+ */
+export interface ResourcesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  resourceType?: T;
+  file?: T;
+  externalUrl?: T;
+  categories?: T;
+  relatedCourses?: T;
+  relatedPathwaysPhases?: T;
+  relatedMinistries?: T;
+  visibility?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  eventType?: T;
+  startDate?: T;
+  endDate?: T;
+  location?: T;
+  virtualLink?: T;
+  facilitators?: T;
+  spiritualFocus?: T;
+  relatedPrayerRequests?: T;
+  requiresSession?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "prayer-requests_select".
+ */
+export interface PrayerRequestsSelect<T extends boolean = true> {
+  profile?: T;
+  summary?: T;
+  request?: T;
+  visibility?: T;
+  allowFollowUp?: T;
+  status?: T;
+  answerTestimony?: T;
+  answeredAt?: T;
+  relatedEvent?: T;
+  assignedLeader?: T;
+  followUpNotes?: T;
+  followUpDate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcements_select".
+ */
+export interface AnnouncementsSelect<T extends boolean = true> {
+  title?: T;
+  message?: T;
+  priority?: T;
+  audience?: T;
+  relatedMinistries?: T;
+  relatedCourse?: T;
+  relatedPathwayPhase?: T;
+  displayLocations?: T;
+  startDate?: T;
+  endDate?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "user-notifications_select".
+ */
+export interface UserNotificationsSelect<T extends boolean = true> {
+  user?: T;
+  title?: T;
+  message?: T;
+  notificationType?: T;
+  announcement?: T;
+  resource?: T;
+  course?: T;
+  pathwaysProgram?: T;
+  pathwaysPhase?: T;
+  enrollment?: T;
+  credential?: T;
+  read?: T;
+  readAt?: T;
+  deliveryChannels?: T;
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credentials_select".
+ */
+export interface CredentialsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  credentialType?: T;
+  issuingBody?: T;
+  requiredCourses?: T;
+  requiredPathwaysProgram?: T;
+  requiredPathwaysPhase?: T;
+  requiredAssignments?: T;
+  requiredAssessments?: T;
+  minimumScore?: T;
+  mentorApprovalRequired?: T;
+  autoAward?: T;
+  requiresPastorApproval?: T;
+  certificateTemplate?: T;
+  expires?: T;
+  expirationMonths?: T;
+  visibility?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

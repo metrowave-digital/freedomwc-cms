@@ -14,16 +14,34 @@ import sharp from 'sharp'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Profiles } from './collections/Profiles'
+import { Cohorts } from './collections/Cohorts'
 import { Applications } from './collections/Applications'
 import { Courses } from './collections/Courses'
 import { Modules } from './collections/Modules'
 import { Lessons } from './collections/Lessons'
+import { JournalEntries } from './collections/JournalEntries'
 import { Assignments } from './collections/Assignments'
-import { AssignmentTypes } from './collections/AssignmentTypes'
+import { Assessments } from './collections/Assessments'
 import { Submissions } from './collections/Submissions'
 import { Enrollments } from './collections/Enrollments'
+import { Progress } from './collections/Progress'
 import { SermonSeries } from './collections/SermonSeries'
 import { SermonsMedia } from './collections/SermonsMedia'
+import { Credentials } from './collections/Credentials'
+import { PathwaysPhases } from './collections/PathwaysPhases'
+import { PathwaysPrograms } from './collections/PathwaysPrograms'
+import { Mentors } from './collections/Mentors'
+import { Instructors } from './collections/Instructors'
+import { LearnerProfiles } from './collections/LearnerProfiles'
+import { WeeklyExperiences } from './collections/WeeklyExperiences'
+import { Announcements } from './collections/Announcements'
+import { UserNotifications } from './collections/UserNotifications'
+import { Resources } from './collections/Resources'
+import { PrayerRequests } from './collections/PrayerRequests'
+import { Events } from './collections/Events'
+import { Sessions } from './collections/Sessions'
+import { EnrollmentAttendance } from './collections/EnrollmentAttendance'
+import { FormationPractices } from './collections/FormationPractices'
 
 /* NEW CONTENT COLLECTIONS */
 import { Sermons } from './collections/Sermons'
@@ -117,23 +135,57 @@ export default buildConfig({
 
   /* ---- COLLECTIONS ---- */
   collections: [
-    Users, // allowed even without auth (just acts as a normal collection)
+    Users,
     Tags,
     Media,
+
+    // PEOPLE & FORMATION
     Profiles,
+    LearnerProfiles,
+    Mentors,
+    Instructors,
+
+    // COMMUNITY
+    Cohorts,
     Applications,
+
+    // LMS
     Courses,
     Modules,
     Lessons,
     Assignments,
-    AssignmentTypes,
+    Assessments,
     Submissions,
     Enrollments,
+    Progress,
+    JournalEntries,
+
+    // ATTENDANCE & SESSIONS
+    Sessions,
+    EnrollmentAttendance,
+
+    // PATHWAYS
+    PathwaysPrograms,
+    PathwaysPhases,
+    WeeklyExperiences,
+    FormationPractices,
+
+    // CONTENT
     SermonSeries,
     SermonsMedia,
     Sermons,
     Devotionals,
     BlogPosts,
+    Resources,
+
+    // COMMUNICATION
+    Events,
+    PrayerRequests,
+    Announcements,
+    UserNotifications,
+
+    // SYSTEM
+    Credentials,
     APIKeys,
   ],
 

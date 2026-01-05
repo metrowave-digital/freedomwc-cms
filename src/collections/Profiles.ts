@@ -1,5 +1,3 @@
-// src/collections/Profiles.ts
-
 import type { CollectionConfig } from 'payload'
 import { profileReadAccess, profileUpdateAccess, loggedIn, isAdmin } from '../access/control'
 import { ROLE_LIST } from '../access/roles'
@@ -27,35 +25,34 @@ export const Profiles: CollectionConfig = {
   },
 
   fields: [
-    //
-    // 🔥 Payload v3 Tabs Wrapper — REQUIRED
-    //
     {
       type: 'tabs',
       tabs: [
-        //
-        // ────────────────────────────────────────────────
-        // BASIC INFO
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           BASIC INFO
+        ===================================================== */
         {
           label: 'Basic Info',
           fields: [
             { name: 'displayName', type: 'text', required: true },
+
             {
               name: 'slug',
               type: 'text',
               unique: true,
               admin: {
-                description: 'Auto or manually set profile slug.',
+                description: 'Public profile slug',
               },
             },
+
             {
               name: 'avatar',
               type: 'upload',
               relationTo: 'media',
             },
+
             { name: 'bio', type: 'textarea' },
+
             {
               name: 'testimony',
               type: 'textarea',
@@ -64,11 +61,9 @@ export const Profiles: CollectionConfig = {
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // PATHWAYS & MINISTRY
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           PATHWAYS & FORMATION
+        ===================================================== */
         {
           label: 'Pathways & Ministry',
           fields: [
@@ -77,39 +72,28 @@ export const Profiles: CollectionConfig = {
               type: 'select',
               defaultValue: 'none',
               options: [
-                {
-                  label: 'Phase 1: Foundations of Christ-Centered Self & Spiritual Awareness',
-                  value: 'restore',
-                },
-                {
-                  label: 'Phase 2: Inner Transformation & Purpose Discovery',
-                  value: 'root',
-                },
-                {
-                  label: 'Phase 3: Community, Relationships & Leadership',
-                  value: 'rise',
-                },
-                {
-                  label: 'Phase 4: Spiritual Mastery, Service & Manifestation',
-                  value: 'release',
-                },
+                { label: 'Phase 1 – Restore', value: 'restore' },
+                { label: 'Phase 2 – Root', value: 'root' },
+                { label: 'Phase 3 – Rise', value: 'rise' },
+                { label: 'Phase 4 – Release', value: 'release' },
                 { label: 'Alumni', value: 'alumni' },
                 { label: 'Not Enrolled', value: 'none' },
               ],
             },
+
             {
               name: 'pathwaysProgress',
               type: 'number',
-              label: 'Pathways Progress (%)',
               min: 0,
               max: 100,
               defaultValue: 0,
             },
+
             {
               name: 'ministryFocus',
               type: 'text',
-              label: 'Ministry / Service Focus',
             },
+
             {
               name: 'volunteerInterests',
               type: 'select',
@@ -128,11 +112,9 @@ export const Profiles: CollectionConfig = {
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // SKILLS & GIFTS
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           SKILLS & GIFTS
+        ===================================================== */
         {
           label: 'Skills & Gifts',
           fields: [
@@ -141,48 +123,50 @@ export const Profiles: CollectionConfig = {
               type: 'select',
               hasMany: true,
               options: [
-                { label: 'Teaching', value: 'teaching' },
-                { label: 'Leadership', value: 'leadership' },
-                { label: 'Wisdom', value: 'wisdom' },
-                { label: 'Prophecy', value: 'prophecy' },
-                { label: 'Healing', value: 'healing' },
-                { label: 'Encouragement', value: 'encouragement' },
-                { label: 'Service', value: 'service' },
-                { label: 'Administration', value: 'administration' },
-                { label: 'Evangelism', value: 'evangelism' },
-                { label: 'Faith', value: 'faith' },
-              ],
+                'teaching',
+                'leadership',
+                'wisdom',
+                'prophecy',
+                'healing',
+                'encouragement',
+                'service',
+                'administration',
+                'evangelism',
+                'faith',
+              ].map((v) => ({
+                label: v.charAt(0).toUpperCase() + v.slice(1),
+                value: v,
+              })),
             },
-            { name: 'skills', type: 'text', label: 'Skills' },
+
+            { name: 'skills', type: 'text' },
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // ASSESSMENTS
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           PERSONAL ASSESSMENTS
+        ===================================================== */
         {
           label: 'Assessments',
           fields: [
             {
               name: 'discProfile',
               type: 'select',
-              options: [
-                { label: 'D', value: 'd' },
-                { label: 'I', value: 'i' },
-                { label: 'S', value: 's' },
-                { label: 'C', value: 'c' },
-              ],
+              options: ['d', 'i', 's', 'c'].map((v) => ({
+                label: v.toUpperCase(),
+                value: v,
+              })),
             },
+
             {
               name: 'enneagram',
               type: 'select',
-              options: ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((n) => ({
-                label: n,
-                value: n,
+              options: Array.from({ length: 9 }).map((_, i) => ({
+                label: String(i + 1),
+                value: String(i + 1),
               })),
             },
+
             {
               name: 'spiritualGiftAssessment',
               type: 'textarea',
@@ -190,11 +174,9 @@ export const Profiles: CollectionConfig = {
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // BADGES & ACHIEVEMENTS
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           BADGES & ACHIEVEMENTS
+        ===================================================== */
         {
           label: 'Badges & Achievements',
           fields: [
@@ -203,22 +185,29 @@ export const Profiles: CollectionConfig = {
               type: 'array',
               fields: [
                 { name: 'title', type: 'text' },
-                { name: 'icon', type: 'upload', relationTo: 'media' },
+                {
+                  name: 'icon',
+                  type: 'upload',
+                  relationTo: 'media',
+                },
                 { name: 'earnedDate', type: 'date' },
               ],
             },
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // LEADERSHIP TRACK
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           LEADERSHIP SIGNALS (NOT LMS ROLES)
+        ===================================================== */
         {
           label: 'Leadership Track',
           fields: [
-            { name: 'isMentor', type: 'checkbox', label: 'Mentor / Coach' },
+            {
+              name: 'isMentorCandidate',
+              type: 'checkbox',
+              label: 'Mentor Candidate',
+            },
+
             {
               name: 'leadershipTrackStatus',
               type: 'select',
@@ -229,68 +218,14 @@ export const Profiles: CollectionConfig = {
                 { label: 'Leading', value: 'leading' },
               ],
             },
+
             { name: 'leadershipNotes', type: 'textarea' },
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // SOCIAL LINKS
-        // ────────────────────────────────────────────────
-        //
-        {
-          label: 'Social Links',
-          fields: [
-            {
-              name: 'social',
-              type: 'group',
-              fields: [
-                { name: 'facebook', type: 'text' },
-                { name: 'instagram', type: 'text' },
-                { name: 'twitter', type: 'text' },
-                { name: 'tiktok', type: 'text' },
-                { name: 'website', type: 'text' },
-              ],
-            },
-          ],
-        },
-
-        //
-        // ────────────────────────────────────────────────
-        // CONTACT PREFERENCES
-        // ────────────────────────────────────────────────
-        //
-        {
-          label: 'Contact Preferences',
-          fields: [
-            {
-              name: 'contactPreference',
-              type: 'select',
-              options: [
-                { label: 'Email', value: 'email' },
-                { label: 'Phone Call', value: 'call' },
-                { label: 'Text Message', value: 'text' },
-              ],
-            },
-            { name: 'doNotContact', type: 'checkbox' },
-          ],
-        },
-
-        //
-        // ────────────────────────────────────────────────
-        // USER LINK
-        // ────────────────────────────────────────────────
-        //
-        {
-          label: 'User Link',
-          fields: [{ name: 'user', type: 'relationship', relationTo: 'users' }],
-        },
-
-        //
-        // ────────────────────────────────────────────────
-        // LEADERSHIP & RELATIONSHIPS
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           RELATIONSHIPS
+        ===================================================== */
         {
           label: 'Leadership & Relationships',
           fields: [
@@ -299,40 +234,38 @@ export const Profiles: CollectionConfig = {
               type: 'relationship',
               relationTo: 'profiles',
             },
+
             { name: 'accountabilityNotes', type: 'textarea' },
+
             {
               name: 'pastorOrMinistryLead',
               type: 'relationship',
               relationTo: 'profiles',
             },
+
             { name: 'leaderNotes', type: 'textarea' },
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // COURSE ENROLLMENTS
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           USER LINK (AUTH)
+        ===================================================== */
         {
-          label: 'Course Enrollments',
+          label: 'User',
           fields: [
             {
-              name: 'enrollments',
+              name: 'user',
               type: 'relationship',
-              relationTo: 'enrollments',
-              hasMany: true,
+              relationTo: 'users',
             },
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // MULTI-ROLE SYSTEM
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           ROLE SIGNALS (NOT AUTH)
+        ===================================================== */
         {
-          label: 'Roles',
+          label: 'Ministry Roles (Signal Only)',
           fields: [
             {
               name: 'roles',
@@ -343,17 +276,15 @@ export const Profiles: CollectionConfig = {
                 value: r,
               })),
               admin: {
-                description: 'Ministry / leadership roles for this person.',
+                description: 'Indicative roles only. Actual permissions come from Users.',
               },
             },
           ],
         },
 
-        //
-        // ────────────────────────────────────────────────
-        // SEO
-        // ────────────────────────────────────────────────
-        //
+        /* =====================================================
+           SEO / PUBLIC PROFILE
+        ===================================================== */
         {
           label: 'SEO',
           fields: Array.isArray(SEOFields) ? [...SEOFields] : [SEOFields],

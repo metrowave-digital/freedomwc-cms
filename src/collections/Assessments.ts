@@ -3,21 +3,21 @@ import type { CollectionConfig } from 'payload'
 import { userHasRole, hasRoleAtLeast } from '../access/roles'
 
 /* ======================================================
-   Assignments Collection
+   Assessments Collection
 ====================================================== */
 
-export const Assignments: CollectionConfig = {
-  slug: 'assignments',
+export const Assessments: CollectionConfig = {
+  slug: 'assessments',
 
   labels: {
-    singular: 'Assignment',
-    plural: 'Assignments',
+    singular: 'Assessment',
+    plural: 'Assessments',
   },
 
   admin: {
     useAsTitle: 'title',
     group: 'Commons (Education)',
-    defaultColumns: ['title', 'assignmentType', 'lesson', 'dueType', 'status', 'updatedAt'],
+    defaultColumns: ['title', 'assessmentType', 'lesson', 'passingScore', 'status', 'updatedAt'],
   },
 
   versions: {
@@ -32,17 +32,18 @@ export const Assignments: CollectionConfig = {
   access: {
     /**
      * READ
-     * - Learners can read instructions
-     * - Mentors / instructors / leaders / pastors can read all
+     * - Students can take assessments
+     * - Mentors+ can review
      */
     read: ({ req }) => {
       if (!req.user) return false
 
+      // Mentors, instructors, leaders, pastors, admins
       if (hasRoleAtLeast(req, 'mentor')) {
         return true
       }
 
-      // Students / members read their assigned content
+      // Students / members taking assessments
       return hasRoleAtLeast(req, 'student')
     },
 
@@ -87,11 +88,10 @@ export const Assignments: CollectionConfig = {
     },
 
     {
-      name: 'instructions',
-      type: 'richText',
-      required: true,
+      name: 'description',
+      type: 'textarea',
       admin: {
-        description: 'Full assignment instructions visible to learners.',
+        description: 'Instructions or overview shown before the assessment begins.',
       },
     },
 
@@ -107,120 +107,123 @@ export const Assignments: CollectionConfig = {
     },
 
     /* ----------------------------------------------- */
-    /* Assignment Type                                 */
+    /* Assessment Type                                 */
     /* ----------------------------------------------- */
 
     {
-      name: 'assignmentType',
+      name: 'assessmentType',
       type: 'select',
       required: true,
       options: [
-        { label: 'Reflection / Journal', value: 'reflection' },
-        { label: 'Short Answer', value: 'short-answer' },
-        { label: 'Essay', value: 'essay' },
-        { label: 'Project', value: 'project' },
-        { label: 'Discussion Response', value: 'discussion' },
-        { label: 'Practical Ministry Exercise', value: 'practice' },
-        { label: 'File Upload', value: 'file' },
+        { label: 'Quiz', value: 'quiz' },
+        { label: 'Exam', value: 'exam' },
+        { label: 'Scripture Check', value: 'scripture' },
+        { label: 'Knowledge Review', value: 'review' },
       ],
     },
 
     /* ----------------------------------------------- */
-    /* Submission Rules                                */
+    /* Settings & Rules                                */
     /* ----------------------------------------------- */
 
     {
-      name: 'submissionType',
-      type: 'select',
-      defaultValue: 'text',
-      options: [
-        { label: 'Text Entry', value: 'text' },
-        { label: 'File Upload', value: 'file' },
-        { label: 'External Link', value: 'link' },
-        { label: 'Mixed (Text + File)', value: 'mixed' },
-      ],
-    },
-
-    {
-      name: 'allowMultipleSubmissions',
-      type: 'checkbox',
-      defaultValue: false,
-    },
-
-    /* ----------------------------------------------- */
-    /* Due Dates & Timing                              */
-    /* ----------------------------------------------- */
-
-    {
-      name: 'dueType',
-      type: 'select',
-      defaultValue: 'none',
-      options: [
-        { label: 'No Due Date', value: 'none' },
-        { label: 'Fixed Date', value: 'fixed' },
-        { label: 'Relative (Days After Lesson)', value: 'relative' },
-      ],
-    },
-
-    {
-      name: 'dueDate',
-      type: 'date',
-      admin: {
-        condition: (_, siblingData) => siblingData?.dueType === 'fixed',
-      },
-    },
-
-    {
-      name: 'dueAfterDays',
+      name: 'timeLimitMinutes',
       type: 'number',
       min: 1,
       admin: {
-        condition: (_, siblingData) => siblingData?.dueType === 'relative',
+        description: 'Optional time limit (minutes). Leave blank for untimed.',
       },
     },
 
-    /* ----------------------------------------------- */
-    /* Grading & Feedback                              */
-    /* ----------------------------------------------- */
+    {
+      name: 'allowRetakes',
+      type: 'checkbox',
+      defaultValue: true,
+    },
 
     {
-      name: 'gradingType',
-      type: 'select',
-      defaultValue: 'completion',
-      options: [
-        { label: 'Completion Only', value: 'completion' },
-        { label: 'Pass / Fail', value: 'pass-fail' },
-        { label: 'Scored / Rubric', value: 'scored' },
-      ],
+      name: 'maxAttempts',
+      type: 'number',
+      min: 1,
+      admin: {
+        condition: (_, siblingData) => siblingData?.allowRetakes === true,
+      },
     },
 
     {
       name: 'passingScore',
       type: 'number',
-      min: 1,
+      min: 0,
       max: 100,
-      admin: {
-        condition: (_, siblingData) => siblingData?.gradingType !== 'completion',
-      },
-    },
-
-    {
-      name: 'rubric',
-      type: 'richText',
-      admin: {
-        condition: (_, siblingData) => siblingData?.gradingType === 'scored',
-      },
+      defaultValue: 70,
     },
 
     /* ----------------------------------------------- */
-    /* Mentor & Pathways Integration                   */
+    /* Questions                                       */
     /* ----------------------------------------------- */
 
     {
-      name: 'mentorFeedbackEnabled',
-      type: 'checkbox',
-      defaultValue: true,
+      name: 'questions',
+      type: 'array',
+      required: true,
+      fields: [
+        {
+          name: 'questionText',
+          type: 'textarea',
+          required: true,
+        },
+
+        {
+          name: 'questionType',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Multiple Choice', value: 'multiple-choice' },
+            { label: 'True / False', value: 'true-false' },
+            { label: 'Short Answer', value: 'short-answer' },
+            { label: 'Scripture Reference', value: 'scripture' },
+          ],
+        },
+
+        {
+          name: 'options',
+          type: 'array',
+          admin: {
+            condition: (_, siblingData) => siblingData?.questionType === 'multiple-choice',
+          },
+          fields: [
+            {
+              name: 'optionText',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'isCorrect',
+              type: 'checkbox',
+            },
+          ],
+        },
+
+        {
+          name: 'correctAnswer',
+          type: 'text',
+          admin: {
+            condition: (_, siblingData) => siblingData?.questionType !== 'multiple-choice',
+          },
+        },
+
+        {
+          name: 'points',
+          type: 'number',
+          defaultValue: 1,
+          min: 1,
+        },
+      ],
     },
+
+    /* ----------------------------------------------- */
+    /* Pathways Integration                            */
+    /* ----------------------------------------------- */
 
     {
       name: 'usedInPathways',
