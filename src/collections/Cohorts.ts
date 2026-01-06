@@ -224,7 +224,7 @@ export const Cohorts: CollectionConfig = {
     },
 
     {
-      name: 'status',
+      name: 'cohortStatus',
       type: 'select',
       defaultValue: 'active',
       admin: {

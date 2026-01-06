@@ -944,7 +944,7 @@ export interface Cohort {
    */
   modules?: (number | Module)[] | null;
   visibility?: ('private' | 'members' | 'public') | null;
-  status?: ('planned' | 'active' | 'completed' | 'archived') | null;
+  cohortStatus?: ('planned' | 'active' | 'completed' | 'archived') | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -2001,7 +2001,7 @@ export interface CohortsSelect<T extends boolean = true> {
   courses?: T;
   modules?: T;
   visibility?: T;
-  status?: T;
+  cohortStatus?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
