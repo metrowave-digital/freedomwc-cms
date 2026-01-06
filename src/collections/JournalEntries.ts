@@ -266,16 +266,13 @@ export const JournalEntries: CollectionConfig = {
     /* ----------------------------------------------- */
 
     {
-      name: 'status',
+      name: 'entryStatus',
       type: 'select',
       defaultValue: 'active',
-      admin: {
-        position: 'sidebar',
-      },
       options: [
         { label: 'Active', value: 'active' },
-        { label: 'Archived', value: 'archived' },
         { label: 'Flagged', value: 'flagged' },
+        { label: 'Archived', value: 'archived' },
       ],
     },
 

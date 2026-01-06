@@ -1147,7 +1147,7 @@ export interface JournalEntry {
     reviewedBy?: (number | null) | User;
     reviewedAt?: string | null;
   };
-  status?: ('active' | 'archived' | 'flagged') | null;
+  entryStatus?: ('active' | 'flagged' | 'archived') | null;
   flagReason?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2356,7 +2356,7 @@ export interface JournalEntriesSelect<T extends boolean = true> {
         reviewedBy?: T;
         reviewedAt?: T;
       };
-  status?: T;
+  entryStatus?: T;
   flagReason?: T;
   updatedAt?: T;
   createdAt?: T;
