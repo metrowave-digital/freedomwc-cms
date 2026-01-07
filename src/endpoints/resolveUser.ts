@@ -16,10 +16,9 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
   --------------------------------------------- */
   const body = typeof req.body === 'object' && req.body !== null ? req.body : {}
 
-  const { auth0Id, email, displayName } = body as {
+  const { auth0Id, email } = body as {
     auth0Id?: string
     email?: string
-    displayName?: string
   }
 
   if (!auth0Id) {
