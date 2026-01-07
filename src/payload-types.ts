@@ -494,7 +494,7 @@ export interface Module {
   usedInPathways?: boolean | null;
   pathwaysPhases?: (number | PathwaysPhase)[] | null;
   visibility?: ('public' | 'enrolled' | 'cohort') | null;
-  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  moduleState?: ('active' | 'archived') | null;
   prefix?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -573,7 +573,7 @@ export interface Lesson {
   usedInPathways?: boolean | null;
   pathwaysPhases?: (number | PathwaysPhase)[] | null;
   visibility?: ('public' | 'enrolled' | 'cohort') | null;
-  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  lessonState?: ('active' | 'archived') | null;
   prefix?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2107,7 +2107,7 @@ export interface ModulesSelect<T extends boolean = true> {
   usedInPathways?: T;
   pathwaysPhases?: T;
   visibility?: T;
-  status?: T;
+  moduleState?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2155,7 +2155,7 @@ export interface LessonsSelect<T extends boolean = true> {
   usedInPathways?: T;
   pathwaysPhases?: T;
   visibility?: T;
-  status?: T;
+  lessonState?: T;
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;
