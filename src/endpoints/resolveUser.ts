@@ -3,7 +3,7 @@ import payload from 'payload'
 
 export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response> {
   /* ---------------------------------------------
-     AUTH (shared secret)
+     AUTH (shared internal secret)
   --------------------------------------------- */
   const secret = req.headers.get('x-internal-secret')
 
@@ -16,9 +16,10 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
   --------------------------------------------- */
   const body = typeof req.body === 'object' && req.body !== null ? req.body : {}
 
-  const { auth0Id, email } = body as {
+  const { auth0Id, email, displayName } = body as {
     auth0Id?: string
     email?: string
+    displayName?: string
   }
 
   if (!auth0Id) {
