@@ -12,15 +12,14 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
   }
 
   /* ---------------------------------------------
-     SAFE BODY ACCESS (Payload v3)
+     PARSE BODY (Payload v3 Web Request)
   --------------------------------------------- */
-  const body =
-    typeof req.body === 'object' && req.body !== null
-      ? (req.body as {
-          auth0Id?: string
-          email?: string
-        })
-      : {}
+  const request = req as unknown as Request
+
+  const body = (await request.json()) as {
+    auth0Id?: string
+    email?: string
+  }
 
   const { auth0Id, email } = body
 
