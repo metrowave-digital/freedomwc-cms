@@ -16,7 +16,20 @@ export const Users: CollectionConfig = {
   },
 
   access: {
-    read: isAdmin,
+    read: ({ req }) => {
+      // Allow admins
+      if (isAdmin({ req })) return true
+
+      // Allow trusted server-side resolution via API key
+      const authHeader = req.headers.get('authorization')
+
+      if (authHeader?.startsWith('users API-Key')) {
+        return true
+      }
+
+      return false
+    },
+
     create: isAdmin,
     update: allowIfSelfOrAdmin,
     delete: isAdmin,

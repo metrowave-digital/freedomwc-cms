@@ -5,17 +5,16 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
   /* ---------------------------------------------
      AUTH (shared internal secret)
   --------------------------------------------- */
-  const secret = req.headers.get('x-internal-secret')
+  const secret = req.headers.get('x-internal-secret') ?? req.headers.get('X-Internal-Secret')
 
-  if (!secret || secret !== process.env.CMS_INTERNAL_SECRET) {
+  if (secret !== process.env.CMS_INTERNAL_SECRET) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
 
   /* ---------------------------------------------
-     PARSE BODY (Payload v3 Web Request)
+     PARSE BODY
   --------------------------------------------- */
   const request = req as unknown as Request
-
   const body = (await request.json()) as {
     auth0Id?: string
     email?: string
@@ -34,6 +33,7 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
     collection: 'users',
     where: { auth0Id: { equals: auth0Id } },
     limit: 1,
+    overrideAccess: true,
   })
 
   if (existing.docs.length > 0) {
@@ -46,7 +46,10 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
         roles: user.roles,
         profile: user.profile ?? null,
       }),
-      { status: 200 },
+      {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      },
     )
   }
 
@@ -61,9 +64,10 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
     collection: 'users',
     data: {
       auth0Id,
-      email,
+      email: email.toLowerCase().trim(),
       roles: ['viewer'],
     },
+    overrideAccess: true,
   })
 
   return new Response(
@@ -73,6 +77,9 @@ export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response
       roles: created.roles,
       profile: created.profile ?? null,
     }),
-    { status: 200 },
+    {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    },
   )
 }
