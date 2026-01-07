@@ -290,6 +290,9 @@ export const Courses: CollectionConfig = {
       name: 'courseState',
       label: 'Course Status',
       type: 'select',
+      admin: {
+        position: 'sidebar',
+      },
       defaultValue: 'active',
       options: [
         { label: 'Active', value: 'active' },

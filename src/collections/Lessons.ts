@@ -287,17 +287,16 @@ export const Lessons: CollectionConfig = {
     },
 
     {
-      name: 'status',
+      name: 'lessonState',
+      label: 'Lesson Status',
       type: 'select',
-      defaultValue: 'draft',
+      defaultValue: 'active',
       admin: {
         position: 'sidebar',
       },
       options: [
-        { label: 'Draft', value: 'draft' },
         { label: 'Active', value: 'active' },
         { label: 'Archived', value: 'archived' },
-        { label: 'Published', value: 'published' },
       ],
     },
   ],

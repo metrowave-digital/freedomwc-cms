@@ -237,17 +237,16 @@ export const Modules: CollectionConfig = {
     /* ----------------------------------------------- */
 
     {
-      name: 'status',
+      name: 'moduleState',
+      label: 'Module Status',
       type: 'select',
-      defaultValue: 'draft',
+      defaultValue: 'active',
       admin: {
         position: 'sidebar',
       },
       options: [
-        { label: 'Draft', value: 'draft' },
         { label: 'Active', value: 'active' },
         { label: 'Archived', value: 'archived' },
-        { label: 'Published', value: 'published' },
       ],
     },
   ],
