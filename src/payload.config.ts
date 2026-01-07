@@ -54,6 +54,7 @@ import { APIKeys } from './collections/APIKeys'
  * GLOBALS
  * ------------------------- */
 import { Settings } from './globals/Settings'
+import { resolveUserEndpoint } from './endpoints/resolveUser'
 
 /* -------------------------
  * PATH RESOLVING
@@ -191,6 +192,15 @@ export default buildConfig({
 
   /* ---- GLOBALS ---- */
   globals: [Settings],
+
+  /* ---- ENDPOINTS --- */
+  endpoints: [
+    {
+      path: '/internal/resolve-user',
+      method: 'post',
+      handler: resolveUserEndpoint,
+    },
+  ],
 
   /* ---- EDITOR ---- */
   editor: lexicalEditor(),
