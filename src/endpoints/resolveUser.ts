@@ -1,85 +1,83 @@
 import type { PayloadRequest } from 'payload'
-import payload from 'payload'
 
 export async function resolveUserEndpoint(req: PayloadRequest): Promise<Response> {
-  /* ---------------------------------------------
-     AUTH (shared internal secret)
-  --------------------------------------------- */
-  const secret = req.headers.get('x-internal-secret') ?? req.headers.get('X-Internal-Secret')
+  try {
+    console.log('🔥 resolve-user endpoint HIT')
 
-  if (secret !== process.env.CMS_INTERNAL_SECRET) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
+    const secret = req.headers.get('x-internal-secret') ?? req.headers.get('X-Internal-Secret')
 
-  /* ---------------------------------------------
-     PARSE BODY
-  --------------------------------------------- */
-  const request = req as unknown as Request
-  const body = (await request.json()) as {
-    auth0Id?: string
-    email?: string
-  }
+    if (secret !== process.env.CMS_INTERNAL_SECRET) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    }
 
-  const { auth0Id, email } = body
+    const request = req as unknown as Request
+    const body = (await request.json()) as {
+      auth0Id?: string
+      email?: string
+    }
 
-  if (!auth0Id) {
-    return new Response(JSON.stringify({ error: 'Missing auth0Id' }), { status: 400 })
-  }
+    const { auth0Id, email } = body
 
-  /* ---------------------------------------------
-     FIND USER
-  --------------------------------------------- */
-  const existing = await payload.find({
-    collection: 'users',
-    where: { auth0Id: { equals: auth0Id } },
-    limit: 1,
-    overrideAccess: true,
-  })
+    if (!auth0Id) {
+      return new Response(JSON.stringify({ error: 'Missing auth0Id' }), { status: 400 })
+    }
 
-  if (existing.docs.length > 0) {
-    const user = existing.docs[0]
+    // ✅ USE REQUEST-SCOPED PAYLOAD
+    const { payload } = req
+
+    const existing = await payload.find({
+      collection: 'users',
+      where: { auth0Id: { equals: auth0Id } },
+      limit: 1,
+      overrideAccess: true,
+    })
+
+    if (existing.docs.length > 0) {
+      const user = existing.docs[0]
+
+      return new Response(
+        JSON.stringify({
+          id: user.id,
+          email: user.email,
+          roles: user.roles,
+          profile: user.profile ?? null,
+        }),
+        { status: 200 },
+      )
+    }
+
+    if (!email) {
+      return new Response(JSON.stringify({ error: 'Email required' }), { status: 400 })
+    }
+
+    const created = await payload.create({
+      collection: 'users',
+      data: {
+        auth0Id,
+        email: email.toLowerCase().trim(),
+        roles: ['viewer'],
+      },
+      overrideAccess: true,
+    })
 
     return new Response(
       JSON.stringify({
-        id: user.id,
-        email: user.email,
-        roles: user.roles,
-        profile: user.profile ?? null,
+        id: created.id,
+        email: created.email,
+        roles: created.roles,
+        profile: created.profile ?? null,
       }),
-      {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      },
+      { status: 200 },
+    )
+  } catch (err) {
+    console.error('💥 RESOLVE USER ERROR:', err)
+
+    return new Response(
+      JSON.stringify({
+        error: 'Internal resolve-user failure',
+        detail: err instanceof Error ? err.message : String(err),
+      }),
+      { status: 500 },
     )
   }
-
-  /* ---------------------------------------------
-     CREATE USER (JIT)
-  --------------------------------------------- */
-  if (!email) {
-    return new Response(JSON.stringify({ error: 'Email required' }), { status: 400 })
-  }
-
-  const created = await payload.create({
-    collection: 'users',
-    data: {
-      auth0Id,
-      email: email.toLowerCase().trim(),
-      roles: ['viewer'],
-    },
-    overrideAccess: true,
-  })
-
-  return new Response(
-    JSON.stringify({
-      id: created.id,
-      email: created.email,
-      roles: created.roles,
-      profile: created.profile ?? null,
-    }),
-    {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    },
-  )
 }
