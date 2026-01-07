@@ -6,7 +6,8 @@ export const Users: CollectionConfig = {
   slug: 'users',
 
   auth: {
-    verify: false, // Auth0 handles verification
+    disableLocalStrategy: true,
+    verify: false,
   },
 
   admin: {
