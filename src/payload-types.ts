@@ -429,7 +429,7 @@ export interface Course {
   pathwaysPhases?: (number | PathwaysPhase)[] | null;
   featuredImage?: (number | null) | Media;
   resources?: (number | Resource)[] | null;
-  status?: ('draft' | 'active' | 'archived' | 'published') | null;
+  courseState?: ('active' | 'inactive' | 'archived') | null;
   publishedAt?: string | null;
   prefix?: string | null;
   updatedAt: string;
@@ -2069,7 +2069,7 @@ export interface CoursesSelect<T extends boolean = true> {
   pathwaysPhases?: T;
   featuredImage?: T;
   resources?: T;
-  status?: T;
+  courseState?: T;
   publishedAt?: T;
   prefix?: T;
   updatedAt?: T;

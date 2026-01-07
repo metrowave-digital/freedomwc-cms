@@ -287,17 +287,14 @@ export const Courses: CollectionConfig = {
     /* ----------------------------------------------- */
 
     {
-      name: 'status',
+      name: 'courseState',
+      label: 'Course Status',
       type: 'select',
-      defaultValue: 'draft',
-      admin: {
-        position: 'sidebar',
-      },
+      defaultValue: 'active',
       options: [
-        { label: 'Draft', value: 'draft' },
         { label: 'Active', value: 'active' },
+        { label: 'Inactive', value: 'inactive' },
         { label: 'Archived', value: 'archived' },
-        { label: 'Published', value: 'published' },
       ],
     },
 
