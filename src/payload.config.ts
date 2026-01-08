@@ -2,6 +2,7 @@
 import { s3Storage } from '@payloadcms/storage-s3'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -247,6 +248,21 @@ export default buildConfig({
 
   /* ---- SHARP ---- */
   sharp,
+
+  email: nodemailerAdapter({
+    defaultFromAddress: 'cms@freedomwc.org',
+    defaultFromName: 'Freedom Worship Center | CMS',
+
+    transportOptions: {
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    },
+  }),
 
   /* ---- STORAGE ADAPTERS ---- */
   plugins: [mediaAdapter, lmsAdapter, sermonsAdapter],
