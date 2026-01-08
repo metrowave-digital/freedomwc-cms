@@ -55,7 +55,7 @@ import { APIKeys } from './collections/APIKeys'
  * GLOBALS
  * ------------------------- */
 import { Settings } from './globals/Settings'
-import { resolveUserEndpoint } from './endpoints/resolveUser'
+import { linkNeonUser } from './endpoints/linkNeonUser'
 
 /* -------------------------
  * PATH RESOLVING
@@ -199,7 +199,7 @@ export default buildConfig({
     {
       path: '/internal/resolve-user',
       method: 'post',
-      handler: resolveUserEndpoint,
+      handler: linkNeonUser,
     },
   ],
 

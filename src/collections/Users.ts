@@ -66,6 +66,16 @@ export const Users: CollectionConfig = {
       },
     },
 
+    {
+      name: 'neonUserId',
+      type: 'text',
+      unique: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Neon Auth user ID (canonical identity)',
+      },
+    },
+
     /* -----------------------------
        LOGIN IDENTITY
     ----------------------------- */

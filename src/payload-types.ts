@@ -197,6 +197,10 @@ export interface User {
    * Auth0 subject (auth0|xxxx)
    */
   auth0Id?: string | null;
+  /**
+   * Neon Auth user ID (canonical identity)
+   */
+  neonUserId?: string | null;
   roles: (
     | 'admin'
     | 'pastor'
@@ -1848,6 +1852,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   auth0Id?: T;
+  neonUserId?: T;
   roles?: T;
   profile?: T;
   updatedAt?: T;
