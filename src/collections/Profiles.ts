@@ -62,6 +62,181 @@ export const Profiles: CollectionConfig = {
         },
 
         /* =====================================================
+   CONTACT & ADDRESS
+===================================================== */
+        {
+          label: 'Contact & Address',
+          fields: [
+            {
+              name: 'phone',
+              type: 'text',
+              label: 'Phone Number',
+              admin: {
+                description: 'Primary contact number',
+              },
+            },
+
+            {
+              name: 'address',
+              type: 'group',
+              label: 'Mailing Address',
+              fields: [
+                {
+                  name: 'street1',
+                  type: 'text',
+                  label: 'Street Address',
+                },
+                {
+                  name: 'street2',
+                  type: 'text',
+                  label: 'Apt / Suite',
+                },
+                {
+                  name: 'city',
+                  type: 'text',
+                  label: 'City',
+                },
+                {
+                  name: 'state',
+                  type: 'text',
+                  label: 'State / Province',
+                },
+                {
+                  name: 'postalCode',
+                  type: 'text',
+                  label: 'ZIP / Postal Code',
+                },
+                {
+                  name: 'country',
+                  type: 'text',
+                  label: 'Country',
+                  defaultValue: 'United States',
+                },
+              ],
+            },
+
+            {
+              name: 'preferredContactMethod',
+              type: 'select',
+              label: 'Preferred Contact Method',
+              options: [
+                { label: 'Email', value: 'email' },
+                { label: 'Phone', value: 'phone' },
+                { label: 'Text Message', value: 'text' },
+              ],
+            },
+
+            {
+              name: 'doNotContact',
+              type: 'checkbox',
+              label: 'Do Not Contact',
+              admin: {
+                description: 'Honors communication preferences',
+              },
+            },
+          ],
+        },
+
+        /* =====================================================
+   EMERGENCY CONTACTS
+===================================================== */
+        {
+          label: 'Emergency Contacts',
+          fields: [
+            {
+              name: 'emergencyContacts',
+              type: 'array',
+              label: 'Emergency Contacts (Non-Members)',
+              minRows: 0,
+              fields: [
+                {
+                  name: 'fullName',
+                  type: 'text',
+                  label: 'Full Name',
+                  required: true,
+                },
+
+                {
+                  name: 'relationship',
+                  type: 'text',
+                  label: 'Relationship',
+                  admin: {
+                    description: 'e.g. Spouse, Parent, Sibling, Guardian, Friend',
+                  },
+                },
+
+                {
+                  name: 'phone',
+                  type: 'text',
+                  label: 'Phone Number',
+                  required: true,
+                },
+
+                {
+                  name: 'email',
+                  type: 'email',
+                  label: 'Email (Optional)',
+                },
+
+                {
+                  name: 'address',
+                  type: 'group',
+                  label: 'Address (Optional)',
+                  fields: [
+                    {
+                      name: 'street1',
+                      type: 'text',
+                      label: 'Street Address',
+                    },
+                    {
+                      name: 'street2',
+                      type: 'text',
+                      label: 'Apt / Suite',
+                    },
+                    {
+                      name: 'city',
+                      type: 'text',
+                      label: 'City',
+                    },
+                    {
+                      name: 'state',
+                      type: 'text',
+                      label: 'State / Province',
+                    },
+                    {
+                      name: 'postalCode',
+                      type: 'text',
+                      label: 'ZIP / Postal Code',
+                    },
+                    {
+                      name: 'country',
+                      type: 'text',
+                      label: 'Country',
+                      defaultValue: 'United States',
+                    },
+                  ],
+                },
+
+                {
+                  name: 'isPrimary',
+                  type: 'checkbox',
+                  label: 'Primary Emergency Contact',
+                },
+
+                {
+                  name: 'notes',
+                  type: 'textarea',
+                  label: 'Notes',
+                  admin: {
+                    description: 'Medical, availability, or special instructions',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+
+        /* =====================================================
            PATHWAYS & FORMATION
         ===================================================== */
         {
@@ -90,8 +265,21 @@ export const Profiles: CollectionConfig = {
             },
 
             {
+              name: 'ministries',
+              type: 'relationship',
+              relationTo: 'ministries',
+              hasMany: true,
+              admin: {
+                description: 'Ministries this person actively serves in',
+              },
+            },
+
+            {
               name: 'ministryFocus',
               type: 'text',
+              admin: {
+                description: 'Calling or area of passion (free text)',
+              },
             },
 
             {
@@ -244,6 +432,132 @@ export const Profiles: CollectionConfig = {
             },
 
             { name: 'leaderNotes', type: 'textarea' },
+          ],
+        },
+
+        /* =====================================================
+   HOUSEHOLD & FAMILY
+===================================================== */
+        {
+          label: 'Household',
+          fields: [
+            {
+              name: 'household',
+              type: 'relationship',
+              relationTo: 'households',
+              admin: {
+                description: 'Primary household this person belongs to',
+              },
+            },
+
+            {
+              name: 'householdRole',
+              type: 'select',
+              options: [
+                { label: 'Head of Household', value: 'head' },
+                { label: 'Spouse', value: 'spouse' },
+                { label: 'Adult', value: 'adult' },
+                { label: 'Youth', value: 'youth' },
+                { label: 'Child', value: 'child' },
+              ],
+            },
+
+            {
+              name: 'emergencyContactNotes',
+              type: 'textarea',
+            },
+          ],
+        },
+
+        /* =====================================================
+   GIVING & STEWARDSHIP
+===================================================== */
+        {
+          label: 'Giving & Stewardship',
+          fields: [
+            {
+              name: 'isTither',
+              type: 'select',
+              options: [
+                { label: 'Yes – Faithful Tither', value: 'yes' },
+                { label: 'Occasional / Growing', value: 'growing' },
+                { label: 'Not Currently', value: 'no' },
+                { label: 'Prefer Not to Say', value: 'unspecified' },
+              ],
+              admin: {
+                description: 'Self-reported tithing status (no amounts)',
+              },
+            },
+
+            {
+              name: 'givingFrequency',
+              type: 'select',
+              options: [
+                { label: 'Weekly', value: 'weekly' },
+                { label: 'Biweekly', value: 'biweekly' },
+                { label: 'Monthly', value: 'monthly' },
+                { label: 'Seasonal', value: 'seasonal' },
+                { label: 'Special Offerings Only', value: 'special' },
+              ],
+            },
+
+            {
+              name: 'givingMethod',
+              type: 'select',
+              hasMany: true,
+              options: [
+                { label: 'In-Person', value: 'in_person' },
+                { label: 'Online', value: 'online' },
+                { label: 'Text-to-Give', value: 'text' },
+                { label: 'Recurring', value: 'recurring' },
+              ],
+            },
+
+            {
+              name: 'participatesInCampaigns',
+              type: 'checkbox',
+              label: 'Participates in Special Campaigns',
+            },
+
+            {
+              name: 'givingNotes',
+              type: 'textarea',
+              admin: {
+                description: 'Pastoral or stewardship notes (private)',
+              },
+            },
+
+            {
+              name: 'lastGaveAt',
+              type: 'date',
+              admin: {
+                position: 'sidebar',
+                description: 'Last recorded giving activity (optional)',
+              },
+            },
+
+            {
+              name: 'preferredGivingFund',
+              type: 'text',
+              admin: {
+                description: 'e.g. Tithe, Missions, Building Fund',
+              },
+            },
+
+            /* -----------------------------------------------
+       OPTIONAL: RELATION TO DONATIONS COLLECTION
+       (future-proof, safe to add now)
+    ------------------------------------------------ */
+            {
+              name: 'donations',
+              type: 'relationship',
+              relationTo: 'donations',
+              hasMany: true,
+              admin: {
+                description: 'Linked donation records (if enabled)',
+                readOnly: true,
+              },
+            },
           ],
         },
 

@@ -50,6 +50,10 @@ import { Devotionals } from './collections/Devotionals'
 import { BlogPosts } from './collections/BlogPosts'
 import { Tags } from './collections/Tags'
 import { APIKeys } from './collections/APIKeys'
+import { Households } from './collections/Households'
+import { Ministries } from './collections/Ministries'
+import { Donations } from './collections/Donations'
+import { GivingCampaigns } from './collections/GivingCampaigns'
 
 /* -------------------------
  * GLOBALS
@@ -185,6 +189,14 @@ export default buildConfig({
     PrayerRequests,
     Announcements,
     UserNotifications,
+
+    // PEOPLE & COMMUNITY
+    Households,
+    Ministries,
+
+    // FINANCE
+    Donations,
+    GivingCampaigns,
 
     // SYSTEM
     Credentials,

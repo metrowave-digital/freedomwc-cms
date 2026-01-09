@@ -96,6 +96,21 @@ export const Users: CollectionConfig = {
     },
 
     /* -----------------------------
+   LEGAL NAME (IDENTITY)
+----------------------------- */
+    {
+      name: 'firstName',
+      type: 'text',
+      label: 'First Name',
+    },
+
+    {
+      name: 'lastName',
+      type: 'text',
+      label: 'Last Name',
+    },
+
+    /* -----------------------------
        RBAC
     ----------------------------- */
     {

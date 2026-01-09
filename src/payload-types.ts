@@ -101,6 +101,10 @@ export interface Config {
     'prayer-requests': PrayerRequest;
     announcements: Announcement;
     'user-notifications': UserNotification;
+    households: Household;
+    ministries: Ministry;
+    donations: Donation;
+    'giving-campaigns': GivingCampaign;
     credentials: Credential;
     'api-keys': ApiKey;
     'payload-kv': PayloadKv;
@@ -144,6 +148,10 @@ export interface Config {
     'prayer-requests': PrayerRequestsSelect<false> | PrayerRequestsSelect<true>;
     announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
     'user-notifications': UserNotificationsSelect<false> | UserNotificationsSelect<true>;
+    households: HouseholdsSelect<false> | HouseholdsSelect<true>;
+    ministries: MinistriesSelect<false> | MinistriesSelect<true>;
+    donations: DonationsSelect<false> | DonationsSelect<true>;
+    'giving-campaigns': GivingCampaignsSelect<false> | GivingCampaignsSelect<true>;
     credentials: CredentialsSelect<false> | CredentialsSelect<true>;
     'api-keys': ApiKeysSelect<false> | ApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -201,6 +209,8 @@ export interface User {
    * Neon Auth user ID (canonical identity)
    */
   neonUserId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
   roles: (
     | 'admin'
     | 'pastor'
@@ -249,8 +259,57 @@ export interface Profile {
   avatar?: (number | null) | Media;
   bio?: string | null;
   testimony?: string | null;
+  /**
+   * Primary contact number
+   */
+  phone?: string | null;
+  address?: {
+    street1?: string | null;
+    street2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
+  preferredContactMethod?: ('email' | 'phone' | 'text') | null;
+  /**
+   * Honors communication preferences
+   */
+  doNotContact?: boolean | null;
+  emergencyContacts?:
+    | {
+        fullName: string;
+        /**
+         * e.g. Spouse, Parent, Sibling, Guardian, Friend
+         */
+        relationship?: string | null;
+        phone: string;
+        email?: string | null;
+        address?: {
+          street1?: string | null;
+          street2?: string | null;
+          city?: string | null;
+          state?: string | null;
+          postalCode?: string | null;
+          country?: string | null;
+        };
+        isPrimary?: boolean | null;
+        /**
+         * Medical, availability, or special instructions
+         */
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   pathwaysPhase?: ('restore' | 'root' | 'rise' | 'release' | 'alumni' | 'none') | null;
   pathwaysProgress?: number | null;
+  /**
+   * Ministries this person actively serves in
+   */
+  ministries?: (number | Ministry)[] | null;
+  /**
+   * Calling or area of passion (free text)
+   */
   ministryFocus?: string | null;
   volunteerInterests?:
     | ('hospitality' | 'worship' | 'creative' | 'outreach' | 'youth' | 'teaching' | 'prayer' | 'events')[]
@@ -288,6 +347,35 @@ export interface Profile {
   accountabilityNotes?: string | null;
   pastorOrMinistryLead?: (number | null) | Profile;
   leaderNotes?: string | null;
+  /**
+   * Primary household this person belongs to
+   */
+  household?: (number | null) | Household;
+  householdRole?: ('head' | 'spouse' | 'adult' | 'youth' | 'child') | null;
+  emergencyContactNotes?: string | null;
+  /**
+   * Self-reported tithing status (no amounts)
+   */
+  isTither?: ('yes' | 'growing' | 'no' | 'unspecified') | null;
+  givingFrequency?: ('weekly' | 'biweekly' | 'monthly' | 'seasonal' | 'special') | null;
+  givingMethod?: ('in_person' | 'online' | 'text' | 'recurring')[] | null;
+  participatesInCampaigns?: boolean | null;
+  /**
+   * Pastoral or stewardship notes (private)
+   */
+  givingNotes?: string | null;
+  /**
+   * Last recorded giving activity (optional)
+   */
+  lastGaveAt?: string | null;
+  /**
+   * e.g. Tithe, Missions, Building Fund
+   */
+  preferredGivingFund?: string | null;
+  /**
+   * Linked donation records (if enabled)
+   */
+  donations?: (number | Donation)[] | null;
   user?: (number | null) | User;
   /**
    * Indicative roles only. Actual permissions come from Users.
@@ -335,6 +423,59 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ministries".
+ */
+export interface Ministry {
+  id: number;
+  title: string;
+  description?: string | null;
+  leader?: (number | null) | Profile;
+  teamMembers?: (number | Profile)[] | null;
+  status?: ('active' | 'seasonal' | 'paused') | null;
+  meetingSchedule?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "households".
+ */
+export interface Household {
+  id: number;
+  /**
+   * e.g. The Johnson Family
+   */
+  name: string;
+  members?: (number | Profile)[] | null;
+  primaryContact?: (number | null) | Profile;
+  campus?: string | null;
+  isActive?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "donations".
+ */
+export interface Donation {
+  id: number;
+  donor: number | Profile;
+  amount?: number | null;
+  /**
+   * e.g. Tithe, Missions, Building Fund
+   */
+  fund?: string | null;
+  method?: ('online' | 'text' | 'in_person' | 'check') | null;
+  date: string;
+  reference?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1626,6 +1767,20 @@ export interface UserNotification {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "giving-campaigns".
+ */
+export interface GivingCampaign {
+  id: number;
+  title: string;
+  description?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  donations?: (number | Donation)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "api-keys".
  */
 export interface ApiKey {
@@ -1797,6 +1952,22 @@ export interface PayloadLockedDocument {
         value: number | UserNotification;
       } | null)
     | ({
+        relationTo: 'households';
+        value: number | Household;
+      } | null)
+    | ({
+        relationTo: 'ministries';
+        value: number | Ministry;
+      } | null)
+    | ({
+        relationTo: 'donations';
+        value: number | Donation;
+      } | null)
+    | ({
+        relationTo: 'giving-campaigns';
+        value: number | GivingCampaign;
+      } | null)
+    | ({
         relationTo: 'credentials';
         value: number | Credential;
       } | null)
@@ -1853,6 +2024,8 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   auth0Id?: T;
   neonUserId?: T;
+  firstName?: T;
+  lastName?: T;
   roles?: T;
   profile?: T;
   updatedAt?: T;
@@ -1912,8 +2085,43 @@ export interface ProfilesSelect<T extends boolean = true> {
   avatar?: T;
   bio?: T;
   testimony?: T;
+  phone?: T;
+  address?:
+    | T
+    | {
+        street1?: T;
+        street2?: T;
+        city?: T;
+        state?: T;
+        postalCode?: T;
+        country?: T;
+      };
+  preferredContactMethod?: T;
+  doNotContact?: T;
+  emergencyContacts?:
+    | T
+    | {
+        fullName?: T;
+        relationship?: T;
+        phone?: T;
+        email?: T;
+        address?:
+          | T
+          | {
+              street1?: T;
+              street2?: T;
+              city?: T;
+              state?: T;
+              postalCode?: T;
+              country?: T;
+            };
+        isPrimary?: T;
+        notes?: T;
+        id?: T;
+      };
   pathwaysPhase?: T;
   pathwaysProgress?: T;
+  ministries?: T;
   ministryFocus?: T;
   volunteerInterests?: T;
   spiritualGifts?: T;
@@ -1936,6 +2144,17 @@ export interface ProfilesSelect<T extends boolean = true> {
   accountabilityNotes?: T;
   pastorOrMinistryLead?: T;
   leaderNotes?: T;
+  household?: T;
+  householdRole?: T;
+  emergencyContactNotes?: T;
+  isTither?: T;
+  givingFrequency?: T;
+  givingMethod?: T;
+  participatesInCampaigns?: T;
+  givingNotes?: T;
+  lastGaveAt?: T;
+  preferredGivingFund?: T;
+  donations?: T;
   user?: T;
   roles?: T;
   seo?:
@@ -2740,6 +2959,63 @@ export interface UserNotificationsSelect<T extends boolean = true> {
   readAt?: T;
   deliveryChannels?: T;
   expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "households_select".
+ */
+export interface HouseholdsSelect<T extends boolean = true> {
+  name?: T;
+  members?: T;
+  primaryContact?: T;
+  campus?: T;
+  isActive?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ministries_select".
+ */
+export interface MinistriesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  leader?: T;
+  teamMembers?: T;
+  status?: T;
+  meetingSchedule?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "donations_select".
+ */
+export interface DonationsSelect<T extends boolean = true> {
+  donor?: T;
+  amount?: T;
+  fund?: T;
+  method?: T;
+  date?: T;
+  reference?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "giving-campaigns_select".
+ */
+export interface GivingCampaignsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  startDate?: T;
+  endDate?: T;
+  donations?: T;
   updatedAt?: T;
   createdAt?: T;
 }
