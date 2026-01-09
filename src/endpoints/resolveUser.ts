@@ -1,18 +1,10 @@
 import type { PayloadRequest, Endpoint } from 'payload'
 import type { FWCRole } from '../access/roles'
 
-/* ======================================================
-   Types
-====================================================== */
-
 type ResolveUserBody = {
   sub?: string
   email?: string
 }
-
-/* ======================================================
-   Helpers
-====================================================== */
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -22,10 +14,6 @@ function jsonResponse(data: unknown, status = 200) {
     },
   })
 }
-
-/* ======================================================
-   Endpoint
-====================================================== */
 
 export const resolveUserEndpoint: Endpoint = {
   path: '/auth/resolve-user',
@@ -49,10 +37,17 @@ export const resolveUserEndpoint: Endpoint = {
     }
 
     /* ---------------------------------------------
-       Body (already parsed by Payload)
+       Body (Payload v3 typing fix)
     --------------------------------------------- */
 
-    const body = req.body as ResolveUserBody
+    let body: ResolveUserBody
+
+    try {
+      const request = req as unknown as Request
+      body = (await request.json()) as ResolveUserBody
+    } catch {
+      return jsonResponse({ error: 'Invalid JSON body' }, 400)
+    }
 
     const auth0Id = body?.sub
     const email = body?.email
