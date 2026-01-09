@@ -60,6 +60,7 @@ import { GivingCampaigns } from './collections/GivingCampaigns'
  * ------------------------- */
 import { Settings } from './globals/Settings'
 import { resolveUserEndpoint } from './endpoints/resolveUser'
+import { updateProfileEndpoint } from './endpoints/updateProfile'
 
 /* -------------------------
  * PATH RESOLVING
@@ -207,7 +208,7 @@ export default buildConfig({
   globals: [Settings],
 
   /* ---- ENDPOINTS --- */
-  endpoints: [resolveUserEndpoint],
+  endpoints: [resolveUserEndpoint, updateProfileEndpoint],
 
   /* ---- EDITOR ---- */
   editor: lexicalEditor(),
