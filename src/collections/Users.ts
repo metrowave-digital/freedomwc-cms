@@ -22,7 +22,6 @@ export const Users: CollectionConfig = {
 
       // Allow trusted server-side resolution via API key
       const authHeader = req.headers.get('authorization')
-
       if (authHeader?.startsWith('users API-Key')) {
         return true
       }
@@ -30,7 +29,17 @@ export const Users: CollectionConfig = {
       return false
     },
 
-    create: isAdmin,
+    create: ({ req }) => {
+      // ✅ Allow trusted server-side creation via API key
+      const authHeader = req.headers.get('authorization')
+      if (authHeader?.startsWith('users API-Key')) {
+        return true
+      }
+
+      // Fallback to admin-only
+      return isAdmin({ req })
+    },
+
     update: allowIfSelfOrAdmin,
     delete: isAdmin,
   },
