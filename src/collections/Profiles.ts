@@ -1,5 +1,9 @@
 import type { CollectionConfig } from 'payload'
+
 import { profileReadAccess, profileUpdateAccess, loggedIn, isAdmin } from '../access/control'
+
+import { editableBySelfOrRole, staffOnlyField, adminOnlyField } from '../access/fieldAccess'
+
 import { ROLE_LIST } from '../access/roles'
 import { SEOFields } from '../fields/seo'
 
@@ -40,9 +44,7 @@ export const Profiles: CollectionConfig = {
               name: 'slug',
               type: 'text',
               unique: true,
-              admin: {
-                description: 'Public profile slug',
-              },
+              admin: { description: 'Public profile slug' },
             },
 
             {
@@ -51,19 +53,24 @@ export const Profiles: CollectionConfig = {
               relationTo: 'media',
             },
 
-            { name: 'bio', type: 'textarea' },
+            {
+              name: 'bio',
+              type: 'textarea',
+              access: { update: editableBySelfOrRole('member') },
+            },
 
             {
               name: 'testimony',
               type: 'textarea',
               label: 'Testimony / Faith Story',
+              access: { update: editableBySelfOrRole('member') },
             },
           ],
         },
 
         /* =====================================================
-   CONTACT & ADDRESS
-===================================================== */
+           CONTACT & ADDRESS
+        ===================================================== */
         {
           label: 'Contact & Address',
           fields: [
@@ -71,45 +78,24 @@ export const Profiles: CollectionConfig = {
               name: 'phone',
               type: 'text',
               label: 'Phone Number',
-              admin: {
-                description: 'Primary contact number',
-              },
+              admin: { description: 'Primary contact number' },
+              access: { update: editableBySelfOrRole('member') },
             },
 
             {
               name: 'address',
               type: 'group',
               label: 'Mailing Address',
+              access: { update: editableBySelfOrRole('member') },
               fields: [
-                {
-                  name: 'street1',
-                  type: 'text',
-                  label: 'Street Address',
-                },
-                {
-                  name: 'street2',
-                  type: 'text',
-                  label: 'Apt / Suite',
-                },
-                {
-                  name: 'city',
-                  type: 'text',
-                  label: 'City',
-                },
-                {
-                  name: 'state',
-                  type: 'text',
-                  label: 'State / Province',
-                },
-                {
-                  name: 'postalCode',
-                  type: 'text',
-                  label: 'ZIP / Postal Code',
-                },
+                { name: 'street1', type: 'text' },
+                { name: 'street2', type: 'text' },
+                { name: 'city', type: 'text' },
+                { name: 'state', type: 'text' },
+                { name: 'postalCode', type: 'text' },
                 {
                   name: 'country',
                   type: 'text',
-                  label: 'Country',
                   defaultValue: 'United States',
                 },
               ],
@@ -118,12 +104,12 @@ export const Profiles: CollectionConfig = {
             {
               name: 'preferredContactMethod',
               type: 'select',
-              label: 'Preferred Contact Method',
               options: [
                 { label: 'Email', value: 'email' },
                 { label: 'Phone', value: 'phone' },
                 { label: 'Text Message', value: 'text' },
               ],
+              access: { update: editableBySelfOrRole('member') },
             },
 
             {
@@ -133,100 +119,46 @@ export const Profiles: CollectionConfig = {
               admin: {
                 description: 'Honors communication preferences',
               },
+              access: { update: editableBySelfOrRole('member') },
             },
           ],
         },
 
         /* =====================================================
-   EMERGENCY CONTACTS
-===================================================== */
+           EMERGENCY CONTACTS
+        ===================================================== */
         {
           label: 'Emergency Contacts',
           fields: [
             {
               name: 'emergencyContacts',
               type: 'array',
-              label: 'Emergency Contacts (Non-Members)',
               minRows: 0,
+              access: { update: editableBySelfOrRole('member') },
               fields: [
-                {
-                  name: 'fullName',
-                  type: 'text',
-                  label: 'Full Name',
-                  required: true,
-                },
-
-                {
-                  name: 'relationship',
-                  type: 'text',
-                  label: 'Relationship',
-                  admin: {
-                    description: 'e.g. Spouse, Parent, Sibling, Guardian, Friend',
-                  },
-                },
-
-                {
-                  name: 'phone',
-                  type: 'text',
-                  label: 'Phone Number',
-                  required: true,
-                },
-
-                {
-                  name: 'email',
-                  type: 'email',
-                  label: 'Email (Optional)',
-                },
+                { name: 'fullName', type: 'text', required: true },
+                { name: 'relationship', type: 'text' },
+                { name: 'phone', type: 'text', required: true },
+                { name: 'email', type: 'email' },
 
                 {
                   name: 'address',
                   type: 'group',
-                  label: 'Address (Optional)',
                   fields: [
-                    {
-                      name: 'street1',
-                      type: 'text',
-                      label: 'Street Address',
-                    },
-                    {
-                      name: 'street2',
-                      type: 'text',
-                      label: 'Apt / Suite',
-                    },
-                    {
-                      name: 'city',
-                      type: 'text',
-                      label: 'City',
-                    },
-                    {
-                      name: 'state',
-                      type: 'text',
-                      label: 'State / Province',
-                    },
-                    {
-                      name: 'postalCode',
-                      type: 'text',
-                      label: 'ZIP / Postal Code',
-                    },
-                    {
-                      name: 'country',
-                      type: 'text',
-                      label: 'Country',
-                      defaultValue: 'United States',
-                    },
+                    { name: 'street1', type: 'text' },
+                    { name: 'street2', type: 'text' },
+                    { name: 'city', type: 'text' },
+                    { name: 'state', type: 'text' },
+                    { name: 'postalCode', type: 'text' },
+                    { name: 'country', type: 'text' },
                   ],
                 },
 
-                {
-                  name: 'isPrimary',
-                  type: 'checkbox',
-                  label: 'Primary Emergency Contact',
-                },
+                { name: 'isPrimary', type: 'checkbox' },
 
                 {
                   name: 'notes',
                   type: 'textarea',
-                  label: 'Notes',
                   admin: {
                     description: 'Medical, availability, or special instructions',
                   },
@@ -246,6 +178,7 @@ export const Profiles: CollectionConfig = {
               name: 'pathwaysPhase',
               type: 'select',
               defaultValue: 'none',
+              access: { update: staffOnlyField },
               options: [
                 { label: 'Phase 1 – Restore', value: 'restore' },
                 { label: 'Phase 2 – Root', value: 'root' },
@@ -262,6 +195,7 @@ export const Profiles: CollectionConfig = {
               min: 0,
               max: 100,
               defaultValue: 0,
+              access: { update: staffOnlyField },
             },
 
             {
@@ -272,6 +206,7 @@ export const Profiles: CollectionConfig = {
               admin: {
                 description: 'Ministries this person actively serves in',
               },
+              access: { update: staffOnlyField },
             },
 
             {
@@ -280,12 +215,14 @@ export const Profiles: CollectionConfig = {
               admin: {
                 description: 'Calling or area of passion (free text)',
               },
+              access: { update: editableBySelfOrRole('leader') },
             },
 
             {
               name: 'volunteerInterests',
               type: 'select',
               hasMany: true,
+              access: { update: editableBySelfOrRole('member') },
               options: [
                 { label: 'Hospitality', value: 'hospitality' },
                 { label: 'Worship / Music', value: 'worship' },

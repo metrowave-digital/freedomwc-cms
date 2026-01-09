@@ -279,9 +279,6 @@ export interface Profile {
   emergencyContacts?:
     | {
         fullName: string;
-        /**
-         * e.g. Spouse, Parent, Sibling, Guardian, Friend
-         */
         relationship?: string | null;
         phone: string;
         email?: string | null;
