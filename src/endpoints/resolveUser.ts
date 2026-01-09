@@ -1,10 +1,18 @@
 import type { PayloadRequest, Endpoint } from 'payload'
 import type { FWCRole } from '../access/roles'
 
+/* ======================================================
+   Types
+====================================================== */
+
 type ResolveUserBody = {
   sub?: string
   email?: string
 }
+
+/* ======================================================
+   Helpers
+====================================================== */
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -14,6 +22,10 @@ function jsonResponse(data: unknown, status = 200) {
     },
   })
 }
+
+/* ======================================================
+   Endpoint
+====================================================== */
 
 export const resolveUserEndpoint: Endpoint = {
   path: '/auth/resolve-user',
@@ -27,7 +39,7 @@ export const resolveUserEndpoint: Endpoint = {
     }
 
     /* ---------------------------------------------
-       API key protection
+       API key protection (server-to-server only)
     --------------------------------------------- */
 
     const authHeader = req.headers?.get('authorization')
@@ -37,7 +49,7 @@ export const resolveUserEndpoint: Endpoint = {
     }
 
     /* ---------------------------------------------
-       Body (Payload v3 typing fix)
+       Parse JSON body (Payload v3)
     --------------------------------------------- */
 
     let body: ResolveUserBody
@@ -61,11 +73,11 @@ export const resolveUserEndpoint: Endpoint = {
       )
     }
 
-    /* ---------------------------------------------
-       Find existing user
-    --------------------------------------------- */
+    /* =================================================
+       1. Find existing user by auth0Id
+    ================================================= */
 
-    const existing = await payload.find({
+    const byAuth0 = await payload.find({
       collection: 'users',
       where: {
         auth0Id: {
@@ -75,13 +87,41 @@ export const resolveUserEndpoint: Endpoint = {
       limit: 1,
     })
 
-    if (existing.docs.length > 0) {
-      return jsonResponse(existing.docs[0])
+    if (byAuth0.docs.length > 0) {
+      return jsonResponse(byAuth0.docs[0])
     }
 
-    /* ---------------------------------------------
-       Create new user
-    --------------------------------------------- */
+    /* =================================================
+       2. Find existing user by email (LINK ACCOUNT)
+    ================================================= */
+
+    const byEmail = await payload.find({
+      collection: 'users',
+      where: {
+        email: {
+          equals: email,
+        },
+      },
+      limit: 1,
+    })
+
+    if (byEmail.docs.length > 0) {
+      const existingUser = byEmail.docs[0]
+
+      const updated = await payload.update({
+        collection: 'users',
+        id: existingUser.id,
+        data: {
+          auth0Id,
+        },
+      })
+
+      return jsonResponse(updated)
+    }
+
+    /* =================================================
+       3. Create new user
+    ================================================= */
 
     const user = await payload.create({
       collection: 'users',
