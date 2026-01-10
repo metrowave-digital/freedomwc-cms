@@ -1,88 +1,148 @@
-import type { Endpoint, PayloadRequest } from 'payload'
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  })
-}
+import type { Endpoint } from 'payload'
 
 export const uploadAvatarEndpoint: Endpoint = {
-  path: '/upload/avatar',
+  path: '/internal/upload-avatar',
   method: 'post',
 
-  handler: async (req: PayloadRequest) => {
+  handler: async (req) => {
     const payload = req.payload
-    if (!payload) return json({ error: 'Payload not initialized' }, 500)
-
-    const user = req.user
-    if (!user) return json({ error: 'Unauthorized' }, 401)
-
-    /* ---------------------------------------------
-       Parse multipart form data
-    --------------------------------------------- */
-    let formData: FormData
-    try {
-      formData = await (req as unknown as Request).formData()
-    } catch {
-      return json({ error: 'Invalid form data' }, 400)
+    if (!payload) {
+      return new Response('Payload not initialized', { status: 500 })
     }
+
+    /* -----------------------------------------
+       API key protection
+    ----------------------------------------- */
+
+    const authHeader = req.headers?.get('authorization')
+    if (authHeader !== `users API-Key ${process.env.PAYLOAD_API_KEY}`) {
+      return new Response('Unauthorized', { status: 401 })
+    }
+
+    /* -----------------------------------------
+       Parse multipart form data
+    ----------------------------------------- */
+
+    const formData = await (req as unknown as Request).formData()
 
     const file = formData.get('file')
-    if (!(file instanceof File)) {
-      return json({ error: 'No file uploaded' }, 400)
+    const profileId = formData.get('profileId')?.toString()
+    const actingUserId = formData.get('actingUserId')?.toString()
+    const alt = formData.get('alt')?.toString() ?? 'Profile avatar'
+
+    if (!file || !(file instanceof File)) {
+      return new Response('Invalid or missing file', { status: 400 })
     }
 
-    /* ---------------------------------------------
-       Convert File → Buffer
-    --------------------------------------------- */
+    if (!profileId || !actingUserId) {
+      return new Response('Missing required fields', { status: 400 })
+    }
+
+    /* -----------------------------------------
+       Load acting user
+    ----------------------------------------- */
+
+    const user = await payload.findByID({
+      collection: 'users',
+      id: actingUserId,
+    })
+
+    if (!user) {
+      return new Response('User not found', { status: 401 })
+    }
+
+    /* -----------------------------------------
+       Load existing profile (for old avatar)
+    ----------------------------------------- */
+
+    const profile = await payload.findByID({
+      collection: 'profiles',
+      id: profileId,
+      user,
+    })
+
+    if (!profile) {
+      return new Response('Profile not found', { status: 404 })
+    }
+
+    const previousAvatarId =
+      typeof profile.avatar === 'number'
+        ? profile.avatar
+        : typeof profile.avatar === 'object'
+          ? profile.avatar?.id
+          : undefined
+
+    /* -----------------------------------------
+       Convert Web File → Payload upload format
+    ----------------------------------------- */
+
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    /* ---------------------------------------------
-       Upload to Media
-    --------------------------------------------- */
+    /* -----------------------------------------
+       Upload new avatar to Media
+    ----------------------------------------- */
+
     const media = await payload.create({
       collection: 'media',
+      data: {
+        alt,
+        visibility: 'public',
+      },
       file: {
         data: buffer,
         mimetype: file.type,
         name: file.name,
-        size: buffer.length,
+        size: file.size,
       },
-      data: {
-        alt: `${user.email ?? 'User'} avatar`,
-        visibility: 'public',
-      },
+      user,
     })
 
-    /* ---------------------------------------------
-       Find profile linked to user
-    --------------------------------------------- */
-    const profileRes = await payload.find({
+    // Payload upload return can be number OR full doc
+    const mediaId = typeof media === 'number' ? media : media.id
+
+    /* -----------------------------------------
+       Update profile with new avatar
+    ----------------------------------------- */
+
+    const updatedProfile = await payload.update({
       collection: 'profiles',
-      where: {
-        user: { equals: user.id },
+      id: profileId,
+      data: {
+        avatar: mediaId,
       },
-      limit: 1,
+      user,
     })
 
-    if (!profileRes.docs.length) {
-      return json({ error: 'Profile not found for user' }, 404)
+    /* -----------------------------------------
+       🗑️ Delete previous avatar (safe cleanup)
+    ----------------------------------------- */
+
+    if (previousAvatarId && previousAvatarId !== mediaId) {
+      try {
+        await payload.delete({
+          collection: 'media',
+          id: previousAvatarId,
+          user,
+        })
+      } catch (err) {
+        payload.logger.warn(`Failed to delete old avatar ${previousAvatarId}`)
+      }
     }
 
-    const profile = profileRes.docs[0]
+    /* -----------------------------------------
+       Response
+    ----------------------------------------- */
 
-    await payload.update({
-      collection: 'profiles',
-      id: profile.id,
-      data: {
-        avatar: media.id,
+    return new Response(
+      JSON.stringify({
+        avatarId: mediaId,
+        replaced: Boolean(previousAvatarId),
+        profile: updatedProfile,
+      }),
+      {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
       },
-    })
-
-    return json({
-      id: media.id,
-      url: media.url,
-    })
+    )
   },
 }
