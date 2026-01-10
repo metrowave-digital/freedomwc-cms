@@ -17,10 +17,8 @@ export const Users: CollectionConfig = {
 
   access: {
     read: ({ req }) => {
-      // Allow admins
       if (isAdmin({ req })) return true
 
-      // Allow trusted server-side resolution via API key
       const authHeader = req.headers.get('authorization')
       if (authHeader?.startsWith('users API-Key')) {
         return true
@@ -30,13 +28,11 @@ export const Users: CollectionConfig = {
     },
 
     create: ({ req }) => {
-      // ✅ Allow trusted server-side creation via API key
       const authHeader = req.headers.get('authorization')
       if (authHeader?.startsWith('users API-Key')) {
         return true
       }
 
-      // Fallback to admin-only
       return isAdmin({ req })
     },
 
@@ -96,8 +92,8 @@ export const Users: CollectionConfig = {
     },
 
     /* -----------------------------
-   LEGAL NAME (IDENTITY)
------------------------------ */
+       LEGAL NAME (IDENTITY)
+    ----------------------------- */
     {
       name: 'firstName',
       type: 'text',
@@ -108,6 +104,21 @@ export const Users: CollectionConfig = {
       name: 'lastName',
       type: 'text',
       label: 'Last Name',
+    },
+
+    {
+      name: 'dateOfBirth',
+      type: 'date',
+      label: 'Date of Birth',
+      admin: {
+        description: 'Legal date of birth (used for identity and records)',
+        date: {
+          pickerAppearance: 'dayOnly',
+        },
+        condition: (_, siblingData, { user }) => {
+          return Boolean(user && isAdmin({ req: { user } as any }))
+        },
+      },
     },
 
     /* -----------------------------

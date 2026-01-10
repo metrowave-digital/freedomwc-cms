@@ -211,6 +211,10 @@ export interface User {
   neonUserId?: string | null;
   firstName?: string | null;
   lastName?: string | null;
+  /**
+   * Legal date of birth (used for identity and records)
+   */
+  dateOfBirth?: string | null;
   roles: (
     | 'admin'
     | 'pastor'
@@ -2023,6 +2027,7 @@ export interface UsersSelect<T extends boolean = true> {
   neonUserId?: T;
   firstName?: T;
   lastName?: T;
+  dateOfBirth?: T;
   roles?: T;
   profile?: T;
   updatedAt?: T;
