@@ -39,7 +39,7 @@ export const uploadAvatarEndpoint: Endpoint = {
     const buffer = Buffer.from(await file.arrayBuffer())
 
     /* ---------------------------------------------
-       Upload to Media collection (Payload v3)
+       Upload to Media
     --------------------------------------------- */
     const media = await payload.create({
       collection: 'media',
@@ -47,7 +47,7 @@ export const uploadAvatarEndpoint: Endpoint = {
         data: buffer,
         mimetype: file.type,
         name: file.name,
-        size: buffer.length, // ✅ THIS FIXES THE ERROR
+        size: buffer.length,
       },
       data: {
         alt: `${user.email ?? 'User'} avatar`,
@@ -56,22 +56,29 @@ export const uploadAvatarEndpoint: Endpoint = {
     })
 
     /* ---------------------------------------------
-       Attach avatar to profile
+       Find profile linked to user
     --------------------------------------------- */
-    const profileId =
-      typeof user.profile === 'string' || typeof user.profile === 'number'
-        ? user.profile
-        : user.profile?.id
+    const profileRes = await payload.find({
+      collection: 'profiles',
+      where: {
+        user: { equals: user.id },
+      },
+      limit: 1,
+    })
 
-    if (profileId) {
-      await payload.update({
-        collection: 'profiles',
-        id: profileId,
-        data: {
-          avatar: media.id,
-        },
-      })
+    if (!profileRes.docs.length) {
+      return json({ error: 'Profile not found for user' }, 404)
     }
+
+    const profile = profileRes.docs[0]
+
+    await payload.update({
+      collection: 'profiles',
+      id: profile.id,
+      data: {
+        avatar: media.id,
+      },
+    })
 
     return json({
       id: media.id,
