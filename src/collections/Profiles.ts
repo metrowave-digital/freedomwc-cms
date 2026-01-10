@@ -51,6 +51,9 @@ export const Profiles: CollectionConfig = {
               name: 'avatar',
               type: 'upload',
               relationTo: 'media',
+              access: {
+                update: editableBySelfOrRole('member'),
+              },
             },
 
             {
