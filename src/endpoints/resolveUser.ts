@@ -65,12 +65,7 @@ export const resolveUserEndpoint: Endpoint = {
     const email = body?.email
 
     if (!auth0Id || !email) {
-      return jsonResponse(
-        {
-          error: 'Missing auth0 subject or email',
-        },
-        400,
-      )
+      return jsonResponse({ error: 'Missing auth0 subject or email' }, 400)
     }
 
     /* =================================================
@@ -80,9 +75,7 @@ export const resolveUserEndpoint: Endpoint = {
     const byAuth0 = await payload.find({
       collection: 'users',
       where: {
-        auth0Id: {
-          equals: auth0Id,
-        },
+        auth0Id: { equals: auth0Id },
       },
       limit: 1,
     })
@@ -98,9 +91,7 @@ export const resolveUserEndpoint: Endpoint = {
     const byEmail = await payload.find({
       collection: 'users',
       where: {
-        email: {
-          equals: email,
-        },
+        email: { equals: email },
       },
       limit: 1,
     })
@@ -120,7 +111,7 @@ export const resolveUserEndpoint: Endpoint = {
     }
 
     /* =================================================
-       3. Create new user
+       3. Create new user (SCHEMA-SAFE DEFAULTS)
     ================================================= */
 
     const user = await payload.create({
@@ -128,6 +119,11 @@ export const resolveUserEndpoint: Endpoint = {
       data: {
         auth0Id,
         email,
+
+        // ✅ REQUIRED for schema + hooks stability
+        firstName: '',
+        lastName: '',
+
         roles: ['viewer'] satisfies FWCRole[],
       },
     })
