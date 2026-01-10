@@ -1,21 +1,11 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
-/* ======================================================
-   Helpers
-====================================================== */
-
-function jsonResponse(data: unknown, status = 200) {
+function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: {
-      'content-type': 'application/json',
-    },
+    headers: { 'content-type': 'application/json' },
   })
 }
-
-/* ======================================================
-   Endpoint
-====================================================== */
 
 export const uploadAvatarEndpoint: Endpoint = {
   path: '/upload/avatar',
@@ -23,86 +13,69 @@ export const uploadAvatarEndpoint: Endpoint = {
 
   handler: async (req: PayloadRequest) => {
     const payload = req.payload
+    if (!payload) return json({ error: 'Payload not initialized' }, 500)
 
-    if (!payload) {
-      return jsonResponse({ error: 'Payload not initialized' }, 500)
-    }
-
-    /* ---------------------------------------------
-       Auth check (same layer as resolveUser)
-    --------------------------------------------- */
-
-    if (!req.user) {
-      return jsonResponse({ error: 'Unauthorized' }, 401)
-    }
+    const user = req.user
+    if (!user) return json({ error: 'Unauthorized' }, 401)
 
     /* ---------------------------------------------
        Parse multipart form data
     --------------------------------------------- */
-
-    let uploadedFile: File | null = null
-
+    let formData: FormData
     try {
-      const request = req as unknown as Request
-      const formData = await request.formData()
-      const file = formData.get('file')
-
-      if (file instanceof File) {
-        uploadedFile = file
-      }
+      formData = await (req as unknown as Request).formData()
     } catch {
-      return jsonResponse({ error: 'Invalid form data' }, 400)
+      return json({ error: 'Invalid form data' }, 400)
     }
 
-    if (!uploadedFile) {
-      return jsonResponse({ error: 'Missing file' }, 400)
-    }
-
-    /* ---------------------------------------------
-       Validate file
-    --------------------------------------------- */
-
-    if (!uploadedFile.type.startsWith('image/')) {
-      return jsonResponse({ error: 'Only image uploads allowed' }, 400)
-    }
-
-    if (uploadedFile.size > 2_000_000) {
-      return jsonResponse({ error: 'Image must be under 2MB' }, 400)
+    const file = formData.get('file')
+    if (!(file instanceof File)) {
+      return json({ error: 'No file uploaded' }, 400)
     }
 
     /* ---------------------------------------------
-       Convert Web File → Payload File
+       Convert File → Buffer
     --------------------------------------------- */
+    const buffer = Buffer.from(await file.arrayBuffer())
 
-    const arrayBuffer = await uploadedFile.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
-    /* =================================================
-       Create Media (Payload-native)
-    ================================================= */
-
+    /* ---------------------------------------------
+       Upload to Media collection (Payload v3)
+    --------------------------------------------- */
     const media = await payload.create({
       collection: 'media',
-      data: {
-        alt: 'User avatar',
-        visibility: 'public',
-      },
       file: {
         data: buffer,
-        mimetype: uploadedFile.type,
-        name: uploadedFile.name,
-        size: uploadedFile.size,
+        mimetype: file.type,
+        name: file.name,
+        size: buffer.length, // ✅ THIS FIXES THE ERROR
+      },
+      data: {
+        alt: `${user.email ?? 'User'} avatar`,
+        visibility: 'public',
       },
     })
 
     /* ---------------------------------------------
-       Response
+       Attach avatar to profile
     --------------------------------------------- */
+    const profileId =
+      typeof user.profile === 'string' || typeof user.profile === 'number'
+        ? user.profile
+        : user.profile?.id
 
-    return jsonResponse({
+    if (profileId) {
+      await payload.update({
+        collection: 'profiles',
+        id: profileId,
+        data: {
+          avatar: media.id,
+        },
+      })
+    }
+
+    return json({
       id: media.id,
       url: media.url,
-      filename: media.filename,
     })
   },
 }
