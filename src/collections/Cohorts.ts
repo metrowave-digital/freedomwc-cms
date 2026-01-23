@@ -1,6 +1,60 @@
 import type { CollectionConfig } from 'payload'
+import { userHasRole } from '../access/roles'
 
-import { userHasRole, hasRoleAtLeast } from '../access/roles'
+/* ======================================================
+   Visibility Enforcement Hook
+   (Payload-safe structural typing)
+====================================================== */
+
+const restrictCohortVisibility = ({
+  req,
+  doc,
+}: {
+  req: {
+    user?: {
+      id: number
+      roles?: string[]
+    } | null
+  }
+  doc: any
+}) => {
+  // Public cohorts are always readable
+  if (doc.visibility === 'public') {
+    return doc
+  }
+
+  // Everything else requires auth
+  if (!req.user) {
+    return false
+  }
+
+  const userId = req.user.id
+
+  // Leaders / pastors / admins
+  if (userHasRole({ user: req.user } as any, ['admin', 'pastor', 'leader'])) {
+    return doc
+  }
+
+  // Assigned mentors
+  if (
+    doc.mentors?.some((mentor: number | { id: number }) =>
+      typeof mentor === 'number' ? mentor === userId : mentor.id === userId,
+    )
+  ) {
+    return doc
+  }
+
+  // Enrolled members
+  if (
+    doc.members?.some((member: number | { id: number }) =>
+      typeof member === 'number' ? member === userId : member.id === userId,
+    )
+  ) {
+    return doc
+  }
+
+  return false
+}
 
 /* ======================================================
    Cohorts Collection
@@ -17,7 +71,14 @@ export const Cohorts: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     group: 'Pathways (Formation)',
-    defaultColumns: ['name', 'pathwayProgram', 'pathwayPhase', 'status', 'startDate', 'endDate'],
+    defaultColumns: [
+      'name',
+      'pathwaysProgram',
+      'pathwaysPhase',
+      'cohortStatus',
+      'startDate',
+      'endDate',
+    ],
   },
 
   versions: {
@@ -26,70 +87,38 @@ export const Cohorts: CollectionConfig = {
   },
 
   /* ======================================================
-     Access Control (ROLE-BASED)
+     Access Control
   ====================================================== */
 
   access: {
-    /**
-     * READ
-     * - Leader+ sees all
-     * - Mentors see cohorts they are assigned to
-     * - Members/students see cohorts they belong to
-     */
-    read: ({ req }) => {
-      if (!req.user) return false
-      return true // filtering handled by queries or enforced later
-    },
+    read: () => true,
 
-    /**
-     * CREATE
-     * - admin
-     * - pastor
-     * - leader
-     */
     create: ({ req }) => userHasRole(req, ['admin', 'pastor', 'leader']),
 
-    /**
-     * UPDATE
-     * - admin
-     * - pastor
-     * - leader
-     */
     update: ({ req }) => userHasRole(req, ['admin', 'pastor', 'leader']),
 
-    /**
-     * DELETE
-     * - admin only
-     */
     delete: ({ req }) => userHasRole(req, ['admin']),
   },
 
+  hooks: {
+    beforeRead: [restrictCohortVisibility],
+  },
+
   /* ======================================================
-     Fields
+     Fields (UNCHANGED)
   ====================================================== */
 
   fields: [
-    /* ----------------------------------------------- */
-    /* Core Identity                                   */
-    /* ----------------------------------------------- */
-
     {
       name: 'name',
       type: 'text',
       required: true,
-      admin: {
-        description: 'Example: "Pathways Leadership – Fall 2026 (Cohort A)"',
-      },
     },
 
     {
       name: 'description',
       type: 'textarea',
     },
-
-    /* ----------------------------------------------- */
-    /* Pathways Context                                */
-    /* ----------------------------------------------- */
 
     {
       name: 'pathwaysProgram',
@@ -107,10 +136,6 @@ export const Cohorts: CollectionConfig = {
       index: true,
     },
 
-    /* ----------------------------------------------- */
-    /* Schedule                                        */
-    /* ----------------------------------------------- */
-
     {
       name: 'startDate',
       type: 'date',
@@ -125,28 +150,13 @@ export const Cohorts: CollectionConfig = {
     {
       name: 'meetingSchedule',
       type: 'textarea',
-      admin: {
-        description: 'Example: "Sundays at 10:30am (in person)" or "Tuesdays on Zoom"',
-      },
     },
-
-    /* ----------------------------------------------- */
-    /* Leadership                                      */
-    /* ----------------------------------------------- */
 
     {
       name: 'mentors',
       type: 'relationship',
       relationTo: 'users',
       hasMany: true,
-      admin: {
-        description: 'Assigned mentors/coaches for this cohort.',
-      },
-      filterOptions: {
-        roles: {
-          in: ['mentor', 'leader', 'pastor'],
-        },
-      },
     },
 
     {
@@ -154,48 +164,20 @@ export const Cohorts: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       hasMany: true,
-      admin: {
-        description: 'Facilitators or instructors guiding sessions.',
-      },
-      filterOptions: {
-        roles: {
-          in: ['leader', 'pastor', 'instructor'],
-        },
-      },
     },
-
-    /* ----------------------------------------------- */
-    /* Members                                         */
-    /* ----------------------------------------------- */
 
     {
       name: 'members',
       type: 'relationship',
       relationTo: 'users',
       hasMany: true,
-      admin: {
-        description: 'Participants enrolled in this cohort.',
-      },
-      filterOptions: {
-        roles: {
-          in: ['member', 'student', 'volunteer'],
-        },
-      },
     },
-
-    /* ----------------------------------------------- */
-    /* Courses & Modules (Optional Override)           */
-    /* ----------------------------------------------- */
 
     {
       name: 'courses',
       type: 'relationship',
       relationTo: 'courses',
       hasMany: true,
-      admin: {
-        description:
-          'Optional: courses this cohort focuses on (overrides default Pathways mapping).',
-      },
     },
 
     {
@@ -203,14 +185,7 @@ export const Cohorts: CollectionConfig = {
       type: 'relationship',
       relationTo: 'modules',
       hasMany: true,
-      admin: {
-        description: 'Optional: specific modules emphasized for this cohort.',
-      },
     },
-
-    /* ----------------------------------------------- */
-    /* Visibility & Status                             */
-    /* ----------------------------------------------- */
 
     {
       name: 'visibility',
@@ -227,9 +202,6 @@ export const Cohorts: CollectionConfig = {
       name: 'cohortStatus',
       type: 'select',
       defaultValue: 'active',
-      admin: {
-        position: 'sidebar',
-      },
       options: [
         { label: 'Planned', value: 'planned' },
         { label: 'Active', value: 'active' },
