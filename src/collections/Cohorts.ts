@@ -37,19 +37,8 @@ export const Cohorts: CollectionConfig = {
      * - Members/students see cohorts they belong to
      */
     read: ({ req }) => {
-      // ✅ Allow server-to-server (API key)
-      const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
-
-      if (authHeader?.startsWith('Bearer ')) {
-        return true
-      }
-
-      // ✅ Allow authenticated users (admin, members, etc.)
-      if (req.user) {
-        return true
-      }
-
-      return false
+      if (!req.user) return false
+      return true // filtering handled by queries or enforced later
     },
 
     /**
